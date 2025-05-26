@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣 ⇄ 冰島 航班行程互動總覽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Assuming Inter is a good default, Tailwind uses system fonts by default */
+        }
+        .tab-active {
+            border-color: #0284c7; /* sky-600 */
+            color: #0284c7; /* sky-600 */
+            background-color: #f0f9ff; /* sky-50 */
+        }
+        .tab-inactive {
+            border-color: transparent;
+        }
+        .flight-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .flight-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-stone-100 text-stone-700 antialiased">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-5xl">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl sm:text-4xl font-bold text-sky-700">台灣 ⇄ 冰島 夢幻航班行程 (9/26去-10/7抵台)</h1>
+            <p class="text-stone-600 mt-2">您的專屬航班計畫，一目了然，輕鬆啟程！</p>
+        </header>
+
+        <main>
+            <div class="mb-6 sm:mb-8">
+                <div class="border-b border-stone-300">
+                    <nav class="-mb-px flex space-x-1 sm:space-x-4 justify-center" aria-label="Tabs">
+                        <button id="tab-outbound" class="tab-active whitespace-nowrap py-3 px-4 sm:py-4 sm:px-6 border-b-2 font-medium text-sm sm:text-base rounded-t-md focus:outline-none">
+                            ✈️ 去程航班
+                        </button>
+                        <button id="tab-return" class="tab-inactive whitespace-nowrap py-3 px-4 sm:py-4 sm:px-6 border-b-2 font-medium text-sm sm:text-base rounded-t-md hover:text-sky-600 hover:border-sky-300 focus:outline-none">
+                            🏠 回程航班
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <div id="content-outbound">
+                <section class="mb-8">
+                    <h2 class="text-2xl font-semibold text-sky-700 mb-1">啟程：踏上冰島的奇幻旅程</h2>
+                    <p class="text-stone-600 mb-6">以下是您從台灣出發，經西雅圖轉機前往冰島的航班詳細資訊。請確認各項細節，為精彩的冒險做好準備！</p>
+                    <div id="outbound-flights-container" class="space-y-6">
+                        </div>
+                </section>
+            </div>
+
+            <div id="content-return" class="hidden">
+                <section class="mb-8">
+                     <h2 class="text-2xl font-semibold text-sky-700 mb-1">歸途：滿載回憶返回家園</h2>
+                    <p class="text-stone-600 mb-6">結束了難忘的冰島之旅，這是您返回台灣的航班安排。願您旅途平安，期待下次的相遇！</p>
+                    <div id="return-flights-container" class="space-y-6">
+                        </div>
+                </section>
+            </div>
+
+            <section class="bg-sky-50 p-6 rounded-lg shadow-md mb-8 border border-sky-200">
+                <h2 class="text-2xl font-semibold text-sky-700 mb-4">📊 行程總覽與預估</h2>
+                <div class="space-y-3 text-stone-700">
+                    <div>
+                        <span class="font-medium">預估機票總金額：</span>
+                        <span class="font-bold text-orange-600">NTD $23,816</span> + <span class="font-bold text-orange-600">USD $547.6 = <span class="font-bold text-orange-600">約4萬1</span>
+                        <p class="text-xs text-stone-500 mt-1">（此為各航段金額加總，未含匯率換算及其他可能費用如機場稅、行李費等，實際金額請依訂票時為準。）</p>
+                    </div>
+                    <div>
+                        <span class="font-medium">建議請假天數：</span>
+                        <span class="font-bold text-sky-600">5天半</span>
+                         <p class="text-xs text-stone-500 mt-1">（依據2025/09/26出發，2025/10/07抵台，10/07上班估算。此天數包含9/26下午出發及10/6全天。）</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-semibold text-sky-700 mb-4">📌 重要注意事項</h2>
+                <div class="prose prose-stone max-w-none text-stone-600 space-y-3">
+                    <p>此處整理了您規劃行程時需要特別留意的資訊，請仔細閱讀，確保旅程順利愉快。</p>
+                    <ul id="important-notes-list" class="list-disc pl-5 space-y-2">
+                        </ul>
+                </div>
+            </section>
+        </main>
+
+        <footer class="mt-12 text-center text-sm text-stone-500">
+            <p>&copy; <span id="currentYear"></span> 您的專屬行程規劃. 祝您旅途愉快！</p>
+        </footer>
+    </div>
+
+    <script>
+        const flightData = {
+            outbound: [
+                {
+                    segmentName: "1. 台灣 → 西雅圖",
+                    airline: "星宇航空 JX32",
+                    origin: { name: "台灣桃園", code: "TPE", flag: "🇹🇼" },
+                    destination: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" },
+                    departureDateTime: "2025/09/26 (週五) 晚上 08:10",
+                    arrivalDateTime: "2025/09/26 (週五) 下午 04:10",
+                    cost: "NTD$12648",
+                    remarks: "直飛。飛行時間約11小時。"
+                },
+                {
+                    segmentName: "2. 西雅圖 → 冰島",
+                    airline: "冰島航空  FI682",
+                    origin: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" },
+                    destination: { name: "冰島凱夫拉維克", code: "KEF", flag: "🇮🇸" },
+                    departureDateTime: "2025/09/27 (週六) 下午 07:00",
+                    arrivalDateTime: "2025/09/28 (週日) 早上 09:25",
+                    cost: "USD$257.6",
+                    remarks: "直飛。飛行時間約7.5小時。<br>西雅圖轉機時間約26小時50分，需在西雅圖過夜。"
+                }
+            ],
+            return: [
+                {
+                    segmentName: "3. 冰島 → 西雅圖",
+                    airline: "冰島航空 FI683",
+                    origin: { name: "冰島凱夫拉維克", code: "KEF", flag: "🇮🇸" },
+                    destination: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" },
+                    departureDateTime: "2025/10/05 (週日) 晚上 07:45", 
+                    arrivalDateTime: "2025/10/05 (週日) 晚上 08:40", 
+                    cost: "約USD$290",
+                    remarks: "直飛。飛行時間約7小時55分鐘。"
+                },
+                {
+                    segmentName: "4. 西雅圖 → 台灣",
+                    airline: "星宇航空 JX31",
+                    origin: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" },
+                    destination: { name: "台灣桃園", code: "TPE", flag: "🇹🇼" },
+                    departureDateTime: "2025/10/06 (週一) 凌晨 01:15", 
+                    arrivalDateTime: "2025/10/07 (週二) 凌晨 04:55", 
+                    cost: "NTD$11168",
+                    remarks: "直飛。飛行時間約12小時40分。<br>西雅圖轉機時間約4小時35分鐘。<br>10/7凌晨抵台，當日早上需上班，請注意休息。" 
+                }
+            ],
+            importantNotes: [
+                "金額：表格中的「金額」欄位請您依照實際查詢的票價填寫。機票價格會因預訂時間、艙等、航空公司促銷活動等因素而有很大變動。",
+                "航班時刻：所有航班時刻均為航空公司當時的排定，實際飛行前仍可能調整，請務必於出發前向航空公司確認。",
+                "簽證與護照：請務必確認您的護照效期（通常建議行程結束後仍有6個月以上效期），並提前辦理所需簽證（美國ESTA及申根簽證）。",
+                "轉機：國際轉機請預留充足時間，特別是不同航空公司。",
+                "住宿與當地交通：別忘了預訂在西雅圖（若過夜）及冰島的住宿與當地交通。",
+                "旅遊保險：強烈建議購買旅遊平安險及旅遊不便險。"
+            ]
+        };
+
+        function createFlightCard(flight) {
+            return `
+                <div class="flight-card bg-white p-5 sm:p-6 rounded-lg shadow-lg border border-stone-200 hover:border-sky-300">
+                    <h3 class="text-xl font-semibold text-sky-700 mb-3">${flight.segmentName}</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm text-stone-600">
+                        <div>
+                            <p class="font-medium text-stone-800">✈️ 航空公司/航班：</p>
+                            <p>${flight.airline}</p>
+                        </div>
+                        <div>
+                            <p class="font-medium text-stone-800">💰 金額 (預估)：</p>
+                            <p class="text-orange-600 font-semibold">${flight.cost}</p>
+                        </div>
+                        <div class="sm:col-span-2 border-t border-stone-200 pt-4 mt-2">
+                            <div class="flex items-center justify-between space-x-2 sm:space-x-4">
+                                <div class="text-center flex-1">
+                                    <p class="text-xs text-stone-500">出發</p>
+                                    <p class="font-semibold text-lg text-sky-600">${flight.origin.flag} ${flight.origin.code}</p>
+                                    <p class="text-xs">${flight.origin.name}</p>
+                                    <p class="text-xs mt-1">${flight.departureDateTime}</p>
+                                </div>
+                                <div class="text-stone-400 text-2xl font-light self-center pb-5 sm:pb-6">→</div>
+                                <div class="text-center flex-1">
+                                    <p class="text-xs text-stone-500">抵達</p>
+                                    <p class="font-semibold text-lg text-sky-600">${flight.destination.flag} ${flight.destination.code}</p>
+                                    <p class="text-xs">${flight.destination.name}</p>
+                                    <p class="text-xs mt-1">${flight.arrivalDateTime}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sm:col-span-2 mt-2">
+                            <p class="font-medium text-stone-800">📝 備註：</p>
+                            <p class="prose prose-sm max-w-none">${flight.remarks.replace(/<br>/g, '<br>')}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const outboundContainer = document.getElementById('outbound-flights-container');
+            const returnContainer = document.getElementById('return-flights-container');
+            const notesList = document.getElementById('important-notes-list');
+
+            outboundContainer.innerHTML = ''; 
+            flightData.outbound.forEach(flight => {
+                outboundContainer.innerHTML += createFlightCard(flight);
+            });
+
+            returnContainer.innerHTML = ''; 
+            flightData.return.forEach(flight => {
+                returnContainer.innerHTML += createFlightCard(flight);
+            });
+
+            notesList.innerHTML = ''; 
+            flightData.importantNotes.forEach(note => {
+                const li = document.createElement('li');
+                li.textContent = note;
+                notesList.appendChild(li);
+            });
+
+            const tabOutbound = document.getElementById('tab-outbound');
+            const tabReturn = document.getElementById('tab-return');
+            const contentOutbound = document.getElementById('content-outbound');
+            const contentReturn = document.getElementById('content-return');
+
+            tabOutbound.addEventListener('click', () => {
+                contentOutbound.classList.remove('hidden');
+                contentReturn.classList.add('hidden');
+                tabOutbound.classList.replace('tab-inactive', 'tab-active');
+                tabReturn.classList.replace('tab-active', 'tab-inactive');
+            });
+
+            tabReturn.addEventListener('click', () => {
+                contentReturn.classList.remove('hidden');
+                contentOutbound.classList.add('hidden');
+                tabReturn.classList.replace('tab-inactive', 'tab-active');
+                tabOutbound.classList.replace('tab-active', 'tab-inactive');
+            });
+
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+        });
+    </script>
+</body>
+</html>
