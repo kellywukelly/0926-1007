@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: 'Inter', sans-serif; /* Assuming Inter is a good default, Tailwind uses system fonts by default */
+            font-family: 'Inter', sans-serif;
         }
         .tab-active {
             border-color: #0284c7; /* sky-600 */
@@ -20,9 +20,34 @@
         .flight-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .flight-card:hover {
+        .flight-card:hover {/
             transform: translateY(-5px);
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        /* Modal styles */
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        .modal-content {
+            transition: transform 0.25s ease;
+        }
+        .spinner {
+            border-top-color: #3498db;
+            animation: spinner 0.6s linear infinite;
+        }
+        @keyframes spinner {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .prose ul ul { /* Tailwind prose override for nested list styling */
+            margin-top: 0.25em;
+            margin-bottom: 0.25em;
+        }
+        /* To-Do List specific styles */
+        .todo-item.completed span {
+            text-decoration: line-through;
+            color: #a1a1aa; /* stone-400 */
         }
     </style>
 </head>
@@ -71,14 +96,30 @@
                 <div class="space-y-3 text-stone-700">
                     <div>
                         <span class="font-medium">預估機票總金額：</span>
-                        <span class="font-bold text-orange-600">NTD $23,816</span> + <span class="font-bold text-orange-600">USD $547.6 = <span class="font-bold text-orange-600">約4萬1</span>
+                        <span class="font-bold text-orange-600">NTD $23,816</span> + <span class="font-bold text-orange-600">USD $547.6</span>
                         <p class="text-xs text-stone-500 mt-1">（此為各航段金額加總，未含匯率換算及其他可能費用如機場稅、行李費等，實際金額請依訂票時為準。）</p>
                     </div>
                     <div>
                         <span class="font-medium">建議請假天數：</span>
                         <span class="font-bold text-sky-600">5天半</span>
-                         <p class="text-xs text-stone-500 mt-1">（依據2025/09/26出發，2025/10/07抵台，10/07上班估算。此天數包含9/26下午出發及10/6全天。）</p>
+                         <p class="text-xs text-stone-500 mt-1">（依據2025/09/26出發，2025/10/07抵台，10/08上班估算。此天數包含9/26下午出發及10/6全天。）</p>
                     </div>
+                </div>
+            </section>
+
+            <section class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h2 class="text-2xl font-semibold text-sky-700 mb-1">✨ 旅程小幫手</h2>
+                <p class="text-stone-600 mb-6">為您的冰島之旅提供更多靈感與實用建議，並管理您的行前準備！</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button id="btn-activity-ideas" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50">
+                        💡 活動靈感 (AI)
+                    </button>
+                    <button id="btn-packing-list" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50">
+                        🎒 打包建議 (精選)
+                    </button>
+                    <button id="btn-todo-list" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-50">
+                        📋 行前待辦清單
+                    </button>
                 </div>
             </section>
 
@@ -96,6 +137,26 @@
             <p>&copy; <span id="currentYear"></span> 您的專屬行程規劃. 祝您旅途愉快！</p>
         </footer>
     </div>
+
+    <div id="general-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden opacity-0">
+        <div class="modal-content bg-white rounded-lg shadow-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto transform scale-95">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-xl font-semibold text-sky-700">AI 建議</h3>
+                <button id="modal-close-btn" class="text-stone-500 hover:text-stone-700 text-2xl focus:outline-none">&times;</button>
+            </div>
+            <div id="modal-body">
+                <div id="modal-loading" class="flex flex-col items-center justify-center py-8 hidden">
+                    <div class="spinner w-12 h-12 rounded-full border-4 border-stone-200"></div>
+                    <p class="mt-3 text-stone-600">正在向 AI 查詢，請稍候...</p>
+                </div>
+                <div id="modal-response" class="prose prose-stone max-w-none text-stone-600">
+                    {MODAL_SPECIFIC_CONTENT_HERE}
+                </div>
+                <div id="modal-error" class="text-red-600 bg-red-100 p-3 rounded-md hidden"></div>
+            </div>
+        </div>
+    </div>
+
 
     <script>
         const flightData = {
@@ -153,6 +214,78 @@
             ]
         };
 
+        const preGeneratedPackingList = `
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">衣物 (洋蔥式穿搭為佳)：</h4>
+            <ul class="list-disc pl-5 space-y-1 mb-4">
+                <li><strong>底層 (吸濕排汗):</strong>
+                    <ul class="list-circle pl-5 space-y-0.5">
+                        <li>保暖內衣褲 (羊毛或機能性材質，2-3套)</li>
+                        <li>長袖排汗衫 (2-3件)</li>
+                    </ul>
+                </li>
+                <li><strong>中層 (保暖):</strong>
+                    <ul class="list-circle pl-5 space-y-0.5">
+                        <li>刷毛外套 (Fleece jacket，1-2件)</li>
+                        <li>輕羽絨外套或背心 (方便攜帶，1件)</li>
+                        <li>羊毛衫 (1-2件)</li>
+                    </ul>
+                </li>
+                <li><strong>外層 (防風防水):</strong>
+                    <ul class="list-circle pl-5 space-y-0.5">
+                        <li>Gore-Tex 或類似材質的防水防風外套 (有帽佳，必備)</li>
+                        <li>防水防風長褲 (雨褲或雪褲，必備)</li>
+                    </ul>
+                </li>
+                <li><strong>一般衣物:</strong>
+                    <ul class="list-circle pl-5 space-y-0.5">
+                        <li>休閒長褲 (快乾材質為佳，1-2條，避免牛仔褲淋濕後難乾)</li>
+                        <li>舒適上衣 (用於室內或較溫暖時)</li>
+                        <li>睡衣 (保暖型)</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">鞋襪：</h4>
+            <ul class="list-disc pl-5 space-y-1 mb-4">
+                <li><strong>防水登山鞋 (高筒為佳，保護腳踝且防滑，必備):</strong> 已馴鞋，避免新鞋磨腳。</li>
+                <li><strong>保暖羊毛襪 (多雙):</strong> 保持腳部乾爽溫暖。</li>
+                <li>輕便休閒鞋 (用於城市、住宿點或飛機上，可選)</li>
+            </ul>
+
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">配件：</h4>
+            <ul class="list-disc pl-5 space-y-1 mb-4">
+                <li><strong>保暖帽子 (能遮住耳朵，毛帽或防風帽，必備)</strong></li>
+                <li><strong>圍巾或魔術頭巾 (保暖頸部，防風，必備)</strong></li>
+                <li><strong>防水保暖手套 (必備，可考慮兩層：薄內層觸控，厚外層防水)</strong></li>
+                <li>太陽眼鏡 (雪地或低角度陽光反射強烈)</li>
+                <li>泳衣與快乾毛巾 (用於溫泉或地熱泳池)</li>
+            </ul>
+
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">個人用品：</h4>
+            <ul class="list-disc pl-5 space-y-1 mb-4">
+                <li>盥洗用品 (牙刷、牙膏、洗面乳、洗髮精、沐浴乳等，部分冰島住宿不提供)</li>
+                <li>保養品 (保濕乳液、護唇膏、防曬乳 – 紫外線仍強)</li>
+                <li>個人藥品 (感冒藥、止痛藥、腸胃藥、暈車藥、OK繃及個人常備藥)</li>
+                <li>行動電源與充電線 (多個電子設備可能同時需要充電)</li>
+                <li>轉換插頭 (歐洲規格，F型雙圓孔)</li>
+                <li>相機及備用電池、記憶卡 (美景拍不停)</li>
+                <li>可重複使用的水瓶 (冰島自來水可生飲，環保又省錢)</li>
+                <li>小型後背包 (一日遊或健行時使用，最好有防水功能或背包雨罩)</li>
+            </ul>
+
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">其他建議：</h4>
+            <ul class="list-disc pl-5 space-y-1">
+                <li>眼罩与耳塞 (若对光线或声音敏感，有助於在极光季节或不同住宿点休息)</li>
+                <li>少量零食 (应对长途驾车或健行时的能量补充)</li>
+                <li>塑胶袋数个 (装湿衣物、垃圾等)</li>
+                <li>护照、签证、机票、住宿预订单、驾照 (国际驾照)、信用卡等重要文件影本或电子档备份</li>
+            </ul>
+            <p class="mt-4 text-sm text-stone-500"><strong>溫馨提示：</strong>九月底十月初的冰島天氣多變，日夜溫差大，且常有強風及降雨。請務必採取洋蔥式穿搭，並隨時注意天氣預報調整衣物。</p>
+        `;
+
+        let todos = [];
+        const TODO_STORAGE_KEY = 'icelandTripToDoList';
+
         function createFlightCard(flight) {
             return `
                 <div class="flight-card bg-white p-5 sm:p-6 rounded-lg shadow-lg border border-stone-200 hover:border-sky-300">
@@ -191,6 +324,219 @@
                 </div>
             `;
         }
+
+        const generalModal = document.getElementById('general-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const modalBody = document.getElementById('modal-body');
+        const modalLoading = document.getElementById('modal-loading');
+        const modalResponse = document.getElementById('modal-response');
+        const modalError = document.getElementById('modal-error');
+
+        function showModal(title, contentHTML = '', isStaticContent = false, isToDoList = false) {
+            modalTitle.textContent = title;
+            modalResponse.innerHTML = contentHTML;
+            modalError.classList.add('hidden');
+            modalError.textContent = '';
+            
+            if (!isStaticContent && !isToDoList) {
+                modalLoading.classList.remove('hidden');
+            } else {
+                modalLoading.classList.add('hidden');
+            }
+            
+            generalModal.classList.remove('hidden');
+            setTimeout(() => generalModal.classList.remove('opacity-0'), 10); 
+            setTimeout(() => document.querySelector('.modal-content').classList.remove('scale-95'), 10);
+        }
+
+        function hideModal() {
+            generalModal.classList.add('opacity-0');
+            document.querySelector('.modal-content').classList.add('scale-95');
+            setTimeout(() => generalModal.classList.add('hidden'), 250); 
+        }
+
+        modalCloseBtn.addEventListener('click', hideModal);
+        generalModal.addEventListener('click', (event) => {
+            if (event.target === generalModal) {
+                hideModal();
+            }
+        });
+
+        async function callGeminiAPI(prompt) {
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }]
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Gemini API Error Response:', errorData);
+                    throw new Error(`API 請求失敗，狀態碼：${response.status}. ${errorData?.error?.message || '未知錯誤'}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    console.error('Gemini API Unexpected Response Structure:', result);
+                    throw new Error('從 API 收到的回應格式不符預期。');
+                }
+            } catch (error) {
+                console.error('呼叫 Gemini API 時發生錯誤:', error);
+                throw error; 
+            }
+        }
+
+        document.getElementById('btn-activity-ideas').addEventListener('click', async () => {
+            showModal('💡 冰島活動靈感 (AI 支援)');
+            const prompt = "我將在9月底到10月初前往冰島旅遊。請推薦一些適合這個季節在冰島進行的活動和值得探訪的景點。請以條列式清單方式呈現，並簡短描述每個項目。";
+            try {
+                const ideasText = await callGeminiAPI(prompt);
+                modalResponse.innerHTML = ideasText.split('\n').map(line => {
+                    const trimmedLine = line.replace(/^[\-\*]\s*/, '').trim();
+                    if(trimmedLine) return `<p>${trimmedLine}</p>`;
+                    return '';
+                }).join('');
+            } catch (error) {
+                modalError.textContent = `無法取得活動建議：${error.message}`;
+                modalError.classList.remove('hidden');
+            } finally {
+                modalLoading.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('btn-packing-list').addEventListener('click', () => {
+            showModal('🎒 行李打包建議 (精選)', preGeneratedPackingList, true);
+        });
+
+        // To-Do List Logic
+        function loadToDos() {
+            const storedToDos = localStorage.getItem(TODO_STORAGE_KEY);
+            if (storedToDos) {
+                todos = JSON.parse(storedToDos);
+            }
+        }
+
+        function saveToDos() {
+            localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(todos));
+        }
+
+        function renderToDoList() {
+            const toDoListContainer = document.createElement('div');
+            toDoListContainer.id = 'todo-list-ui-container';
+
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'flex mb-4';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = 'todo-input';
+            input.placeholder = '新增待辦事項...';
+            input.className = 'flex-grow p-2 border border-stone-300 rounded-l-md focus:ring-amber-500 focus:border-amber-500';
+            const addButton = document.createElement('button');
+            addButton.id = 'add-todo-btn';
+            addButton.textContent = '新增';
+            addButton.className = 'bg-amber-500 hover:bg-amber-600 text-white p-2 rounded-r-md focus:outline-none';
+            
+            inputGroup.appendChild(input);
+            inputGroup.appendChild(addButton);
+            toDoListContainer.appendChild(inputGroup);
+
+            const ul = document.createElement('ul');
+            ul.id = 'todo-items-list';
+            ul.className = 'space-y-2';
+
+            todos.forEach(todo => {
+                const li = document.createElement('li');
+                li.className = `todo-item flex items-center justify-between p-2 border-b border-stone-200 ${todo.completed ? 'completed' : ''}`;
+                li.dataset.id = todo.id;
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = todo.completed;
+                checkbox.className = 'form-checkbox h-5 w-5 text-amber-500 rounded focus:ring-amber-400 mr-3 cursor-pointer';
+                
+                const span = document.createElement('span');
+                span.textContent = todo.text;
+                span.className = 'flex-grow cursor-pointer';
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '✕';
+                deleteButton.className = 'text-red-400 hover:text-red-600 font-semibold ml-3 focus:outline-none';
+
+                li.appendChild(checkbox);
+                li.appendChild(span);
+                li.appendChild(deleteButton);
+                ul.appendChild(li);
+            });
+            toDoListContainer.appendChild(ul);
+            
+            addButton.addEventListener('click', () => {
+                const text = input.value.trim();
+                if (text) {
+                    addToDoItem(text);
+                    input.value = '';
+                }
+            });
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addButton.click();
+                }
+            });
+
+            ul.addEventListener('click', (e) => {
+                const target = e.target;
+                const li = target.closest('li.todo-item');
+                if (!li) return;
+                const todoId = Number(li.dataset.id);
+
+                if (target.type === 'checkbox' || target.tagName === 'SPAN') {
+                    toggleComplete(todoId);
+                } else if (target.tagName === 'BUTTON') {
+                    deleteToDoItem(todoId);
+                }
+            });
+            return toDoListContainer.innerHTML;
+        }
+        
+        function addToDoItem(text) {
+            todos.push({ id: Date.now(), text, completed: false });
+            saveToDos();
+            modalResponse.innerHTML = renderToDoList(); // Re-render inside modal
+        }
+
+        function toggleComplete(id) {
+            const todo = todos.find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+                saveToDos();
+                modalResponse.innerHTML = renderToDoList(); // Re-render inside modal
+            }
+        }
+
+        function deleteToDoItem(id) {
+            todos = todos.filter(t => t.id !== id);
+            saveToDos();
+            modalResponse.innerHTML = renderToDoList(); // Re-render inside modal
+        }
+
+        document.getElementById('btn-todo-list').addEventListener('click', () => {
+            loadToDos(); // Load todos from localStorage
+            showModal('📋 行前待辦清單', renderToDoList(), true, true);
+        });
+
 
         document.addEventListener('DOMContentLoaded', () => {
             const outboundContainer = document.getElementById('outbound-flights-container');
@@ -234,6 +580,7 @@
             });
 
             document.getElementById('currentYear').textContent = new Date().getFullYear();
+            loadToDos(); // Initial load of todos in case other parts of the script need them, though primary load is on button click for now.
         });
     </script>
 </body>
