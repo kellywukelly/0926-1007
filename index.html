@@ -230,7 +230,12 @@
             ],
             importantNotes: [
                 "簽證與護照：請務必確認您的護照效期（通常建議行程結束後仍有6個月以上效期），並提前辦理所需簽證（美國ESTA及申根簽證）。",
-                "電壓與插座：冰島的標準電壓為 230V，頻率為 50Hz。插座類型為 F 型（雙圓孔，也稱為 Schuko），此類型插座亦相容於 C 型和 E 型插頭。建議攜帶通用轉換插頭以備不時之需。",
+                { 
+                    type: "voltage_plug",
+                    text: "電壓與插座：冰島的標準電壓為 230V，頻率為 50Hz。插座類型為 F 型（雙圓孔，也稱為 Schuko），此類型插座亦相容於 C 型和 E 型插頭。建議攜帶通用轉換插頭以備不時之需。",
+                    imageUrl: "https://raw.githubusercontent.com/kellywukelly/0926-1007/main/Steckdose.jpg", 
+                    imageAlt: "F 型 (Schuko) 插座與插頭示意圖"
+                },
                 "轉機：國際轉機請預留充足時間，特別是不同航空公司。",
                 "住宿與當地交通：別忘了預訂在西雅圖（若過夜）及冰島的住宿與當地交通。",
                 "旅遊保險：強烈建議購買旅遊平安險及旅遊不便險。"
@@ -285,8 +290,8 @@
             modalResponse.innerHTML = contentHTML;
             modalError.classList.add('hidden');
             modalError.textContent = '';
-            modalLoading.classList.add('hidden'); // Default to hidden
-            if (!isStaticContent && !isToDoList) { // Only show loader for AI calls
+            modalLoading.classList.add('hidden'); 
+            if (!isStaticContent && !isToDoList) { 
                 modalLoading.classList.remove('hidden');
             }
             generalModal.classList.remove('hidden');
@@ -350,7 +355,6 @@
                     });
                 });
             });
-             // Activate default tab
             if (defaultActiveTarget) {
                 document.querySelector(`#${mainTabContentId} button[data-target='${defaultActiveTarget}']`)?.click();
             }
@@ -359,8 +363,8 @@
         function setupIcelandDailyTabs() {
             const navContainer = document.getElementById('iceland-daily-nav');
             const contentArea = document.getElementById('iceland-daily-content-area');
-            navContainer.innerHTML = ''; // Clear previous
-            contentArea.innerHTML = ''; // Clear previous
+            navContainer.innerHTML = ''; 
+            contentArea.innerHTML = ''; 
 
             flightData.icelandDays.forEach((dateStr, index) => {
                 const dateObj = new Date(dateStr);
@@ -401,7 +405,7 @@
                 });
             });
              if (dailyTabs.length > 0) {
-                dailyTabs[0].click(); // Activate the first day by default
+                dailyTabs[0].click(); 
             }
         }
 
@@ -475,8 +479,16 @@
             flightData.outbound.forEach(flight => outboundFlightsContainer.innerHTML += createFlightCard(flight));
             flightData.return.forEach(flight => returnFlightsContainer.innerHTML += createFlightCard(flight));
             
-            notesList.innerHTML = ''; // Clear before re-populating
-            flightData.importantNotes.forEach(note => { const li = document.createElement('li'); li.textContent = note; notesList.appendChild(li); });
+            notesList.innerHTML = ''; 
+            flightData.importantNotes.forEach(note => {
+                const li = document.createElement('li');
+                if (typeof note === 'string') {
+                    li.textContent = note;
+                } else if (typeof note === 'object' && note.type === 'voltage_plug') {
+                    li.innerHTML = `${note.text} <br><img src="${note.imageUrl}" alt="${note.imageAlt}" class="my-2 rounded-md shadow-sm max-w-xs mx-auto" style="max-height:100px;">`;
+                }
+                notesList.appendChild(li);
+            });
 
             const mainTabs = [
                 { btn: document.getElementById('main-tab-outbound'), content: document.getElementById('content-outbound') },
@@ -501,7 +513,6 @@
             setupSubTabs('content-return', 'sub-tab-return', 'content-return-details');
             setupIcelandDailyTabs();
 
-            // Activate the first main tab by default
             if (mainTabs.length > 0) {
                  mainTabs[0].btn.click();
             }
