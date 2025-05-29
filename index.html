@@ -9,22 +9,31 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        .tab-active {
+        .main-tab-active {
             border-color: #0284c7; /* sky-600 */
             color: #0284c7; /* sky-600 */
             background-color: #f0f9ff; /* sky-50 */
         }
-        .tab-inactive {
+        .main-tab-inactive {
             border-color: transparent;
+        }
+        .sub-tab-active {
+            background-color: #ccfbf1; /* teal-100 */
+            color: #0d9488; /* teal-600 */
+            border-color: #0d9488; /* teal-600 */
+        }
+        .sub-tab-inactive {
+            background-color: #f1f5f9; /* slate-100 */
+            color: #475569; /* slate-600 */
+            border-color: #e2e8f0; /* slate-300 */
         }
         .flight-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        .flight-card:hover {/
+        .flight-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
-        /* Modal styles */
         .modal {
             transition: opacity 0.25s ease;
         }
@@ -40,11 +49,10 @@
                 transform: rotate(360deg);
             }
         }
-        .prose ul ul { /* Tailwind prose override for nested list styling */
+        .prose ul ul {
             margin-top: 0.25em;
             margin-bottom: 0.25em;
         }
-        /* To-Do List specific styles */
         .todo-item.completed span {
             text-decoration: line-through;
             color: #a1a1aa; /* stone-400 */
@@ -62,33 +70,84 @@
         <main>
             <div class="mb-6 sm:mb-8">
                 <div class="border-b border-stone-300">
-                    <nav class="-mb-px flex space-x-1 sm:space-x-4 justify-center" aria-label="Tabs">
-                        <button id="tab-outbound" class="tab-active whitespace-nowrap py-3 px-4 sm:py-4 sm:px-6 border-b-2 font-medium text-sm sm:text-base rounded-t-md focus:outline-none">
+                    <nav class="-mb-px flex space-x-1 sm:space-x-2 md:space-x-4 justify-center" aria-label="Main Tabs">
+                        <button id="main-tab-outbound" class="main-tab-active whitespace-nowrap py-3 px-2 sm:px-4 md:px-6 border-b-2 font-medium text-xs sm:text-sm md:text-base rounded-t-md focus:outline-none">
                             ✈️ 去程航班
                         </button>
-                        <button id="tab-return" class="tab-inactive whitespace-nowrap py-3 px-4 sm:py-4 sm:px-6 border-b-2 font-medium text-sm sm:text-base rounded-t-md hover:text-sky-600 hover:border-sky-300 focus:outline-none">
+                        <button id="main-tab-iceland" class="main-tab-inactive whitespace-nowrap py-3 px-2 sm:px-4 md:px-6 border-b-2 font-medium text-xs sm:text-sm md:text-base rounded-t-md hover:text-sky-600 hover:border-sky-300 focus:outline-none">
+                            🇮🇸 冰島每日行程
+                        </button>
+                        <button id="main-tab-return" class="main-tab-inactive whitespace-nowrap py-3 px-2 sm:px-4 md:px-6 border-b-2 font-medium text-xs sm:text-sm md:text-base rounded-t-md hover:text-sky-600 hover:border-sky-300 focus:outline-none">
                             🏠 回程航班
                         </button>
                     </nav>
                 </div>
             </div>
 
-            <div id="content-outbound">
-                <section class="mb-8">
-                    <h2 class="text-2xl font-semibold text-sky-700 mb-1">啟程：踏上冰島的奇幻旅程</h2>
-                    <p class="text-stone-600 mb-6">以下是您從台灣出發，經西雅圖轉機前往冰島的航班詳細資訊。請確認各項細節，為精彩的冒險做好準備！</p>
-                    <div id="outbound-flights-container" class="space-y-6">
-                        </div>
-                </section>
-            </div>
+            <div id="main-content-area">
+                <div id="content-outbound" class="main-tab-content-panel">
+                    <nav class="flex space-x-2 mb-4 border-b border-slate-200 pb-2">
+                        <button data-target="content-outbound-details" class="sub-tab-outbound sub-tab-active px-3 py-2 text-sm font-medium rounded-md">航班詳情</button>
+                        <button data-target="content-outbound-seattle" class="sub-tab-outbound sub-tab-inactive px-3 py-2 text-sm font-medium rounded-md">西雅圖 (過境)</button>
+                    </nav>
+                    <div id="content-outbound-details" class="sub-tab-content">
+                        <section class="mb-8">
+                            <h2 class="text-2xl font-semibold text-sky-700 mb-1">啟程：踏上冰島的奇幻旅程</h2>
+                            <p class="text-stone-600 mb-6">以下是您從台灣出發，經西雅圖轉機前往冰島的航班詳細資訊。</p>
+                            <div id="outbound-flights-container" class="space-y-6"></div>
+                        </section>
+                    </div>
+                    <div id="content-outbound-seattle" class="sub-tab-content hidden">
+                        <section class="mb-8 p-4 bg-white rounded-lg shadow">
+                            <h3 class="text-xl font-semibold text-sky-700 mb-3">西雅圖過境 (去程：9/26傍晚 - 9/27下午)</h3>
+                            <p class="text-stone-600 mb-2">您將在西雅圖停留約26小時50分鐘。這段時間您可以：</p>
+                            <ul class="list-disc pl-5 text-stone-600 space-y-1">
+                                <li>預訂機場附近的飯店好好休息。</li>
+                                <li>若時間充裕且精力許可，可考慮搭乘輕軌前往市區進行短暫觀光 (例如：派克市場、太空針塔附近)。</li>
+                                <li>確保已辦妥美國ESTA。</li>
+                                <li><strong class="text-amber-600">在此處記錄您的西雅圖住宿、交通或簡要計畫...</strong></li>
+                            </ul>
+                             <textarea placeholder="輸入您在西雅圖去程過境的筆記..." class="mt-4 w-full p-2 border border-stone-300 rounded-md h-32 focus:ring-sky-500 focus:border-sky-500"></textarea>
+                        </section>
+                    </div>
+                </div>
 
-            <div id="content-return" class="hidden">
-                <section class="mb-8">
-                     <h2 class="text-2xl font-semibold text-sky-700 mb-1">歸途：滿載回憶返回家園</h2>
-                    <p class="text-stone-600 mb-6">結束了難忘的冰島之旅，這是您返回台灣的航班安排。願您旅途平安，期待下次的相遇！</p>
-                    <div id="return-flights-container" class="space-y-6">
-                        </div>
-                </section>
+                <div id="content-iceland" class="main-tab-content-panel hidden">
+                    <section class="mb-8">
+                        <h2 class="text-2xl font-semibold text-teal-600 mb-1">🇮🇸 冰島每日行程 (9/28 - 10/5)</h2>
+                        <p class="text-stone-600 mb-4">規劃您在冰島的每一天！點擊下方日期查看或編輯當日行程。</p>
+                        <nav id="iceland-daily-nav" class="flex flex-wrap gap-2 mb-4 pb-2 border-b border-slate-200">
+                            </nav>
+                        <div id="iceland-daily-content-area">
+                            </div>
+                    </section>
+                </div>
+
+                <div id="content-return" class="main-tab-content-panel hidden">
+                     <nav class="flex space-x-2 mb-4 border-b border-slate-200 pb-2">
+                        <button data-target="content-return-details" class="sub-tab-return sub-tab-active px-3 py-2 text-sm font-medium rounded-md">航班詳情</button>
+                        <button data-target="content-return-seattle" class="sub-tab-return sub-tab-inactive px-3 py-2 text-sm font-medium rounded-md">西雅圖 (過境)</button>
+                    </nav>
+                    <div id="content-return-details" class="sub-tab-content">
+                        <section class="mb-8">
+                            <h2 class="text-2xl font-semibold text-sky-700 mb-1">歸途：滿載回憶返回家園</h2>
+                            <p class="text-stone-600 mb-6">結束了難忘的冰島之旅，這是您返回台灣的航班安排。</p>
+                            <div id="return-flights-container" class="space-y-6"></div>
+                        </section>
+                    </div>
+                     <div id="content-return-seattle" class="sub-tab-content hidden">
+                        <section class="mb-8 p-4 bg-white rounded-lg shadow">
+                            <h3 class="text-xl font-semibold text-sky-700 mb-3">西雅圖過境 (回程：10/5傍晚 - 10/6凌晨)</h3>
+                            <p class="text-stone-600 mb-2">您將在西雅圖停留約4小時35分鐘。這段時間主要用於機場內轉機：</p>
+                             <ul class="list-disc pl-5 text-stone-600 space-y-1">
+                                <li>遵循機場指示前往下一段航班的登機門。</li>
+                                <li>若有需要，可在機場免稅店稍作停留。</li>
+                                <li><strong class="text-amber-600">在此處記錄您的西雅圖回程過境的注意事項...</strong></li>
+                            </ul>
+                            <textarea placeholder="輸入您在西雅圖回程過境的筆記..." class="mt-4 w-full p-2 border border-stone-300 rounded-md h-32 focus:ring-sky-500 focus:border-sky-500"></textarea>
+                        </section>
+                    </div>
+                </div>
             </div>
 
             <section class="bg-sky-50 p-6 rounded-lg shadow-md mb-8 border border-sky-200">
@@ -96,8 +155,13 @@
                 <div class="space-y-3 text-stone-700">
                     <div>
                         <span class="font-medium">預估機票總金額：</span>
-                        <span class="font-bold text-orange-600">NTD $23,816</span> + <span class="font-bold text-orange-600">USD $547.6</span>
-                        <p class="text-xs text-stone-500 mt-1">（此為各航段金額加總，未含匯率換算及其他可能費用如機場稅、行李費等，實際金額請依訂票時為準。）</p>
+                        <span class="font-bold text-orange-600">NTD $41,555</span>
+                        <p class="text-xs text-stone-500 mt-1">（此為預估總金額，未含其他可能費用如機場稅、行李費、匯率浮動等，實際金額請依訂票時為準。）</p>
+                    </div>
+                    <div>
+                        <span class="font-medium">美國簽證ESTA費用：</span>
+                        <span class="font-bold text-orange-600">USD $21</span>
+                         <p class="text-xs text-stone-500 mt-1">（此為預估費用，實際金額請依申請時官方公告為準。）</p>
                     </div>
                     <div>
                         <span class="font-medium">建議請假天數：</span>
@@ -127,8 +191,7 @@
                 <h2 class="text-2xl font-semibold text-sky-700 mb-4">📌 重要注意事項</h2>
                 <div class="prose prose-stone max-w-none text-stone-600 space-y-3">
                     <p>此處整理了您規劃行程時需要特別留意的資訊，請仔細閱讀，確保旅程順利愉快。</p>
-                    <ul id="important-notes-list" class="list-disc pl-5 space-y-2">
-                        </ul>
+                    <ul id="important-notes-list" class="list-disc pl-5 space-y-2"></ul>
                 </div>
             </section>
         </main>
@@ -149,137 +212,44 @@
                     <div class="spinner w-12 h-12 rounded-full border-4 border-stone-200"></div>
                     <p class="mt-3 text-stone-600">正在向 AI 查詢，請稍候...</p>
                 </div>
-                <div id="modal-response" class="prose prose-stone max-w-none text-stone-600">
-                    {MODAL_SPECIFIC_CONTENT_HERE}
-                </div>
+                <div id="modal-response" class="prose prose-stone max-w-none text-stone-600"></div>
                 <div id="modal-error" class="text-red-600 bg-red-100 p-3 rounded-md hidden"></div>
             </div>
         </div>
     </div>
 
-
     <script>
         const flightData = {
             outbound: [
-                {
-                    segmentName: "1. 台灣 → 西雅圖",
-                    airline: "星宇航空 JX32",
-                    origin: { name: "台灣桃園", code: "TPE", flag: "🇹🇼" },
-                    destination: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" },
-                    departureDateTime: "2025/09/26 (週五) 晚上 08:10",
-                    arrivalDateTime: "2025/09/26 (週五) 下午 04:10",
-                    cost: "NTD$12648",
-                    remarks: "直飛。飛行時間約11小時。"
-                },
-                {
-                    segmentName: "2. 西雅圖 → 冰島",
-                    airline: "冰島航空  FI682",
-                    origin: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" },
-                    destination: { name: "冰島凱夫拉維克", code: "KEF", flag: "🇮🇸" },
-                    departureDateTime: "2025/09/27 (週六) 下午 07:00",
-                    arrivalDateTime: "2025/09/28 (週日) 早上 09:25",
-                    cost: "USD$257.6",
-                    remarks: "直飛。飛行時間約7.5小時。<br>西雅圖轉機時間約26小時50分，需在西雅圖過夜。"
-                }
+                { segmentName: "1. 台灣 → 西雅圖", airline: "星宇航空 JX32", origin: { name: "台灣桃園", code: "TPE", flag: "🇹🇼" }, destination: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" }, departureDateTime: "2025/09/26 (週五) 晚上 08:10", arrivalDateTime: "2025/09/26 (週五) 下午 04:10", cost: "NTD$12648", remarks: "直飛。飛行時間約11小時。" },
+                { segmentName: "2. 西雅圖 → 冰島", airline: "冰島航空  FI682", origin: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" }, destination: { name: "冰島凱夫拉維克", code: "KEF", flag: "🇮🇸" }, departureDateTime: "2025/09/27 (週六) 下午 07:00", arrivalDateTime: "2025/09/28 (週日) 早上 09:25", cost: "USD$257.6", remarks: "直飛。飛行時間約7.5小時。<br>西雅圖轉機時間約26小時50分，需在西雅圖過夜。" }
             ],
             return: [
-                {
-                    segmentName: "3. 冰島 → 西雅圖",
-                    airline: "冰島航空 FI683",
-                    origin: { name: "冰島凱夫拉維克", code: "KEF", flag: "🇮🇸" },
-                    destination: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" },
-                    departureDateTime: "2025/10/05 (週日) 晚上 07:45", 
-                    arrivalDateTime: "2025/10/05 (週日) 晚上 08:40", 
-                    cost: "約USD$290",
-                    remarks: "直飛。飛行時間約7小時55分鐘。"
-                },
-                {
-                    segmentName: "4. 西雅圖 → 台灣",
-                    airline: "星宇航空 JX31",
-                    origin: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" },
-                    destination: { name: "台灣桃園", code: "TPE", flag: "🇹🇼" },
-                    departureDateTime: "2025/10/06 (週一) 凌晨 01:15", 
-                    arrivalDateTime: "2025/10/07 (週二) 凌晨 04:55", 
-                    cost: "NTD$11168",
-                    remarks: "直飛。飛行時間約12小時40分。<br>西雅圖轉機時間約4小時35分鐘。<br>10/7凌晨抵台，當日早上需上班，請注意休息。" 
-                }
+                { segmentName: "3. 冰島 → 西雅圖", airline: "冰島航空 FI683", origin: { name: "冰島凱夫拉維克", code: "KEF", flag: "🇮🇸" }, destination: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" }, departureDateTime: "2025/10/05 (週日) 晚上 07:45", arrivalDateTime: "2025/10/05 (週日) 晚上 08:40", cost: "約USD$290", remarks: "直飛。飛行時間約7小時55分鐘。" },
+                { segmentName: "4. 西雅圖 → 台灣", airline: "星宇航空 JX31", origin: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" }, destination: { name: "台灣桃園", code: "TPE", flag: "🇹🇼" }, departureDateTime: "2025/10/06 (週一) 凌晨 01:15", arrivalDateTime: "2025/10/07 (週二) 凌晨 04:55", cost: "NTD$11168", remarks: "直飛。飛行時間約12小時40分。<br>西雅圖轉機時間約4小時35分鐘。<br>10/7凌晨抵台，當日需上班，可自行請假，請注意休息。" }
             ],
             importantNotes: [
-                "金額：表格中的「金額」欄位請您依照實際查詢的票價填寫。機票價格會因預訂時間、艙等、航空公司促銷活動等因素而有很大變動。",
-                "航班時刻：所有航班時刻均為航空公司當時的排定，實際飛行前仍可能調整，請務必於出發前向航空公司確認。",
                 "簽證與護照：請務必確認您的護照效期（通常建議行程結束後仍有6個月以上效期），並提前辦理所需簽證（美國ESTA及申根簽證）。",
+                "電壓與插座：冰島的標準電壓為 230V，頻率為 50Hz。插座類型為 F 型（雙圓孔，也稱為 Schuko），此類型插座亦相容於 C 型和 E 型插頭。建議攜帶通用轉換插頭以備不時之需。",
                 "轉機：國際轉機請預留充足時間，特別是不同航空公司。",
                 "住宿與當地交通：別忘了預訂在西雅圖（若過夜）及冰島的住宿與當地交通。",
                 "旅遊保險：強烈建議購買旅遊平安險及旅遊不便險。"
-            ]
+            ],
+            icelandDays: ["2025/09/28", "2025/09/29", "2025/09/30", "2025/10/01", "2025/10/02", "2025/10/03", "2025/10/04", "2025/10/05"]
         };
 
         const preGeneratedPackingList = `
             <h4 class="text-lg font-semibold text-emerald-700 mb-3">衣物 (洋蔥式穿搭為佳)：</h4>
             <ul class="list-disc pl-5 space-y-1 mb-4">
-                <li><strong>底層 (吸濕排汗):</strong>
-                    <ul class="list-circle pl-5 space-y-0.5">
-                        <li>保暖內衣褲 (羊毛或機能性材質，2-3套)</li>
-                        <li>長袖排汗衫 (2-3件)</li>
-                    </ul>
-                </li>
-                <li><strong>中層 (保暖):</strong>
-                    <ul class="list-circle pl-5 space-y-0.5">
-                        <li>刷毛外套 (Fleece jacket，1-2件)</li>
-                        <li>輕羽絨外套或背心 (方便攜帶，1件)</li>
-                        <li>羊毛衫 (1-2件)</li>
-                    </ul>
-                </li>
-                <li><strong>外層 (防風防水):</strong>
-                    <ul class="list-circle pl-5 space-y-0.5">
-                        <li>Gore-Tex 或類似材質的防水防風外套 (有帽佳，必備)</li>
-                        <li>防水防風長褲 (雨褲或雪褲，必備)</li>
-                    </ul>
-                </li>
-                <li><strong>一般衣物:</strong>
-                    <ul class="list-circle pl-5 space-y-0.5">
-                        <li>休閒長褲 (快乾材質為佳，1-2條，避免牛仔褲淋濕後難乾)</li>
-                        <li>舒適上衣 (用於室內或較溫暖時)</li>
-                        <li>睡衣 (保暖型)</li>
-                    </ul>
-                </li>
+                <li><strong>底層 (吸濕排汗):</strong> <ul class="list-circle pl-5 space-y-0.5"><li>保暖內衣褲 (羊毛或機能性材質，2-3套)</li><li>長袖排汗衫 (2-3件)</li></ul></li>
+                <li><strong>中層 (保暖):</strong> <ul class="list-circle pl-5 space-y-0.5"><li>刷毛外套 (Fleece jacket，1-2件)</li><li>輕羽絨外套或背心 (方便攜帶，1件)</li><li>羊毛衫 (1-2件)</li></ul></li>
+                <li><strong>外層 (防風防水):</strong> <ul class="list-circle pl-5 space-y-0.5"><li>Gore-Tex 或類似材質的防水防風外套 (有帽佳，必備)</li><li>防水防風長褲 (雨褲或雪褲，必備)</li></ul></li>
+                <li><strong>一般衣物:</strong> <ul class="list-circle pl-5 space-y-0.5"><li>休閒長褲 (快乾材質為佳，1-2條，避免牛仔褲淋濕後難乾)</li><li>舒適上衣 (用於室內或較溫暖時)</li><li>睡衣 (保暖型)</li></ul></li>
             </ul>
-
-            <h4 class="text-lg font-semibold text-emerald-700 mb-3">鞋襪：</h4>
-            <ul class="list-disc pl-5 space-y-1 mb-4">
-                <li><strong>防水登山鞋 (高筒為佳，保護腳踝且防滑，必備):</strong> 已馴鞋，避免新鞋磨腳。</li>
-                <li><strong>保暖羊毛襪 (多雙):</strong> 保持腳部乾爽溫暖。</li>
-                <li>輕便休閒鞋 (用於城市、住宿點或飛機上，可選)</li>
-            </ul>
-
-            <h4 class="text-lg font-semibold text-emerald-700 mb-3">配件：</h4>
-            <ul class="list-disc pl-5 space-y-1 mb-4">
-                <li><strong>保暖帽子 (能遮住耳朵，毛帽或防風帽，必備)</strong></li>
-                <li><strong>圍巾或魔術頭巾 (保暖頸部，防風，必備)</strong></li>
-                <li><strong>防水保暖手套 (必備，可考慮兩層：薄內層觸控，厚外層防水)</strong></li>
-                <li>太陽眼鏡 (雪地或低角度陽光反射強烈)</li>
-                <li>泳衣與快乾毛巾 (用於溫泉或地熱泳池)</li>
-            </ul>
-
-            <h4 class="text-lg font-semibold text-emerald-700 mb-3">個人用品：</h4>
-            <ul class="list-disc pl-5 space-y-1 mb-4">
-                <li>盥洗用品 (牙刷、牙膏、洗面乳、洗髮精、沐浴乳等，部分冰島住宿不提供)</li>
-                <li>保養品 (保濕乳液、護唇膏、防曬乳 – 紫外線仍強)</li>
-                <li>個人藥品 (感冒藥、止痛藥、腸胃藥、暈車藥、OK繃及個人常備藥)</li>
-                <li>行動電源與充電線 (多個電子設備可能同時需要充電)</li>
-                <li>轉換插頭 (歐洲規格，F型雙圓孔)</li>
-                <li>相機及備用電池、記憶卡 (美景拍不停)</li>
-                <li>可重複使用的水瓶 (冰島自來水可生飲，環保又省錢)</li>
-                <li>小型後背包 (一日遊或健行時使用，最好有防水功能或背包雨罩)</li>
-            </ul>
-
-            <h4 class="text-lg font-semibold text-emerald-700 mb-3">其他建議：</h4>
-            <ul class="list-disc pl-5 space-y-1">
-                <li>眼罩与耳塞 (若对光线或声音敏感，有助於在极光季节或不同住宿点休息)</li>
-                <li>少量零食 (应对长途驾车或健行时的能量补充)</li>
-                <li>塑胶袋数个 (装湿衣物、垃圾等)</li>
-                <li>护照、签证、机票、住宿预订单、驾照 (国际驾照)、信用卡等重要文件影本或电子档备份</li>
-            </ul>
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">鞋襪：</h4><ul class="list-disc pl-5 space-y-1 mb-4"><li><strong>防水登山鞋 (高筒為佳，保護腳踝且防滑，必備):</strong> 已馴鞋，避免新鞋磨腳。</li><li><strong>保暖羊毛襪 (多雙):</strong> 保持腳部乾爽溫暖。</li><li>輕便休閒鞋 (用於城市、住宿點或飛機上，可選)</li></ul>
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">配件：</h4><ul class="list-disc pl-5 space-y-1 mb-4"><li><strong>保暖帽子 (能遮住耳朵，毛帽或防風帽，必備)</strong></li><li><strong>圍巾或魔術頭巾 (保暖頸部，防風，必備)</strong></li><li><strong>防水保暖手套 (必備，可考慮兩層：薄內層觸控，厚外層防水)</strong></li><li>太陽眼鏡 (雪地或低角度陽光反射強烈)</li><li>泳衣與快乾毛巾 (用於溫泉或地熱泳池)</li></ul>
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">個人用品：</h4><ul class="list-disc pl-5 space-y-1 mb-4"><li>盥洗用品 (牙刷、牙膏、洗面乳、洗髮精、沐浴乳等，部分冰島住宿不提供)</li><li>保養品 (保濕乳液、護唇膏、防曬乳 – 紫外線仍強)</li><li>個人藥品 (感冒藥、止痛藥、腸胃藥、暈車藥、OK繃及個人常備藥)</li><li>行動電源與充電線</li><li>轉換插頭 (歐洲規格，F型雙圓孔)</li><li>相機及備用電池、記憶卡</li><li>可重複使用的水瓶</li><li>小型後背包 (一日遊或健行時使用，最好有防水功能或背包雨罩)</li></ul>
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">其他建議：</h4><ul class="list-disc pl-5 space-y-1"><li>眼罩与耳塞</li><li>少量零食</li><li>塑胶袋数个</li><li>护照、签证、机票、住宿预订单、驾照 (国际驾照)、信用卡等重要文件影本或电子档备份</li></ul>
             <p class="mt-4 text-sm text-stone-500"><strong>溫馨提示：</strong>九月底十月初的冰島天氣多變，日夜溫差大，且常有強風及降雨。請務必採取洋蔥式穿搭，並隨時注意天氣預報調整衣物。</p>
         `;
 
@@ -291,44 +261,21 @@
                 <div class="flight-card bg-white p-5 sm:p-6 rounded-lg shadow-lg border border-stone-200 hover:border-sky-300">
                     <h3 class="text-xl font-semibold text-sky-700 mb-3">${flight.segmentName}</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm text-stone-600">
-                        <div>
-                            <p class="font-medium text-stone-800">✈️ 航空公司/航班：</p>
-                            <p>${flight.airline}</p>
-                        </div>
-                        <div>
-                            <p class="font-medium text-stone-800">💰 金額 (預估)：</p>
-                            <p class="text-orange-600 font-semibold">${flight.cost}</p>
-                        </div>
-                        <div class="sm:col-span-2 border-t border-stone-200 pt-4 mt-2">
-                            <div class="flex items-center justify-between space-x-2 sm:space-x-4">
-                                <div class="text-center flex-1">
-                                    <p class="text-xs text-stone-500">出發</p>
-                                    <p class="font-semibold text-lg text-sky-600">${flight.origin.flag} ${flight.origin.code}</p>
-                                    <p class="text-xs">${flight.origin.name}</p>
-                                    <p class="text-xs mt-1">${flight.departureDateTime}</p>
-                                </div>
-                                <div class="text-stone-400 text-2xl font-light self-center pb-5 sm:pb-6">→</div>
-                                <div class="text-center flex-1">
-                                    <p class="text-xs text-stone-500">抵達</p>
-                                    <p class="font-semibold text-lg text-sky-600">${flight.destination.flag} ${flight.destination.code}</p>
-                                    <p class="text-xs">${flight.destination.name}</p>
-                                    <p class="text-xs mt-1">${flight.arrivalDateTime}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="sm:col-span-2 mt-2">
-                            <p class="font-medium text-stone-800">📝 備註：</p>
-                            <p class="prose prose-sm max-w-none">${flight.remarks.replace(/<br>/g, '<br>')}</p>
-                        </div>
+                        <div><p class="font-medium text-stone-800">✈️ 航空公司/航班：</p><p>${flight.airline}</p></div>
+                        <div><p class="font-medium text-stone-800">💰 金額 (預估)：</p><p class="text-orange-600 font-semibold">${flight.cost}</p></div>
+                        <div class="sm:col-span-2 border-t border-stone-200 pt-4 mt-2"><div class="flex items-center justify-between space-x-2 sm:space-x-4">
+                            <div class="text-center flex-1"><p class="text-xs text-stone-500">出發</p><p class="font-semibold text-lg text-sky-600">${flight.origin.flag} ${flight.origin.code}</p><p class="text-xs">${flight.origin.name}</p><p class="text-xs mt-1">${flight.departureDateTime}</p></div>
+                            <div class="text-stone-400 text-2xl font-light self-center pb-5 sm:pb-6">→</div>
+                            <div class="text-center flex-1"><p class="text-xs text-stone-500">抵達</p><p class="font-semibold text-lg text-sky-600">${flight.destination.flag} ${flight.destination.code}</p><p class="text-xs">${flight.destination.name}</p><p class="text-xs mt-1">${flight.arrivalDateTime}</p></div>
+                        </div></div>
+                        <div class="sm:col-span-2 mt-2"><p class="font-medium text-stone-800">📝 備註：</p><p class="prose prose-sm max-w-none">${flight.remarks.replace(/<br>/g, '<br>')}</p></div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
         const generalModal = document.getElementById('general-modal');
         const modalTitle = document.getElementById('modal-title');
         const modalCloseBtn = document.getElementById('modal-close-btn');
-        const modalBody = document.getElementById('modal-body');
         const modalLoading = document.getElementById('modal-loading');
         const modalResponse = document.getElementById('modal-response');
         const modalError = document.getElementById('modal-error');
@@ -338,67 +285,126 @@
             modalResponse.innerHTML = contentHTML;
             modalError.classList.add('hidden');
             modalError.textContent = '';
-            
-            if (!isStaticContent && !isToDoList) {
+            modalLoading.classList.add('hidden'); // Default to hidden
+            if (!isStaticContent && !isToDoList) { // Only show loader for AI calls
                 modalLoading.classList.remove('hidden');
-            } else {
-                modalLoading.classList.add('hidden');
             }
-            
             generalModal.classList.remove('hidden');
-            setTimeout(() => generalModal.classList.remove('opacity-0'), 10); 
+            setTimeout(() => generalModal.classList.remove('opacity-0'), 10);
             setTimeout(() => document.querySelector('.modal-content').classList.remove('scale-95'), 10);
         }
 
         function hideModal() {
             generalModal.classList.add('opacity-0');
             document.querySelector('.modal-content').classList.add('scale-95');
-            setTimeout(() => generalModal.classList.add('hidden'), 250); 
+            setTimeout(() => generalModal.classList.add('hidden'), 250);
         }
 
         modalCloseBtn.addEventListener('click', hideModal);
         generalModal.addEventListener('click', (event) => {
-            if (event.target === generalModal) {
-                hideModal();
-            }
+            if (event.target === generalModal) hideModal();
         });
 
         async function callGeminiAPI(prompt) {
-            const apiKey = ""; 
+            const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-            
-            const payload = {
-                contents: [{ role: "user", parts: [{ text: prompt }] }]
-            };
-
+            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
             try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 if (!response.ok) {
                     const errorData = await response.json();
-                    console.error('Gemini API Error Response:', errorData);
                     throw new Error(`API 請求失敗，狀態碼：${response.status}. ${errorData?.error?.message || '未知錯誤'}`);
                 }
-
                 const result = await response.json();
-                
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
+                if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
                     return result.candidates[0].content.parts[0].text;
                 } else {
-                    console.error('Gemini API Unexpected Response Structure:', result);
                     throw new Error('從 API 收到的回應格式不符預期。');
                 }
             } catch (error) {
                 console.error('呼叫 Gemini API 時發生錯誤:', error);
-                throw error; 
+                throw error;
             }
         }
+        
+        function setupSubTabs(mainTabContentId, subTabButtonClass, defaultActiveTarget) {
+            const subTabButtons = document.querySelectorAll(`#${mainTabContentId} .${subTabButtonClass}`);
+            const subTabContents = document.querySelectorAll(`#${mainTabContentId} .sub-tab-content`);
+
+            subTabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    subTabButtons.forEach(btn => {
+                        btn.classList.remove('sub-tab-active');
+                        btn.classList.add('sub-tab-inactive');
+                    });
+                    button.classList.remove('sub-tab-inactive');
+                    button.classList.add('sub-tab-active');
+
+                    const targetId = button.dataset.target;
+                    subTabContents.forEach(content => {
+                        if (content.id === targetId) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+             // Activate default tab
+            if (defaultActiveTarget) {
+                document.querySelector(`#${mainTabContentId} button[data-target='${defaultActiveTarget}']`)?.click();
+            }
+        }
+
+        function setupIcelandDailyTabs() {
+            const navContainer = document.getElementById('iceland-daily-nav');
+            const contentArea = document.getElementById('iceland-daily-content-area');
+            navContainer.innerHTML = ''; // Clear previous
+            contentArea.innerHTML = ''; // Clear previous
+
+            flightData.icelandDays.forEach((dateStr, index) => {
+                const dateObj = new Date(dateStr);
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const shortDate = `${month}/${day}`;
+                const contentId = `content-iceland-day-${month}${day}`;
+
+                const button = document.createElement('button');
+                button.textContent = shortDate;
+                button.dataset.target = contentId;
+                button.className = `sub-tab-iceland-day ${index === 0 ? 'sub-tab-active' : 'sub-tab-inactive'} px-3 py-2 text-sm font-medium rounded-md border`;
+                navContainer.appendChild(button);
+
+                const div = document.createElement('div');
+                div.id = contentId;
+                div.className = `sub-tab-content p-4 bg-white rounded-lg shadow ${index !== 0 ? 'hidden' : ''}`;
+                div.innerHTML = `
+                    <h4 class="text-lg font-semibold text-teal-700 mb-3">冰島 ${dateStr} (${['日', '一', '二', '三', '四', '五', '六'][dateObj.getDay()]}) 行程</h4>
+                    <p class="text-stone-500 mb-2">您可以在這裡記錄當天的住宿、景點、餐廳、活動等計畫。</p>
+                    <textarea placeholder="輸入 ${shortDate} 的行程筆記..." class="w-full p-2 border border-stone-300 rounded-md h-48 focus:ring-teal-500 focus:border-teal-500"></textarea>
+                `;
+                contentArea.appendChild(div);
+            });
+            
+            const dailyTabs = document.querySelectorAll('.sub-tab-iceland-day');
+            dailyTabs.forEach(button => {
+                button.addEventListener('click', () => {
+                    dailyTabs.forEach(btn => {
+                        btn.classList.remove('sub-tab-active');
+                        btn.classList.add('sub-tab-inactive');
+                    });
+                    button.classList.remove('sub-tab-inactive');
+                    button.classList.add('sub-tab-active');
+                    
+                    document.querySelectorAll('#iceland-daily-content-area .sub-tab-content').forEach(content => content.classList.add('hidden'));
+                    document.getElementById(button.dataset.target).classList.remove('hidden');
+                });
+            });
+             if (dailyTabs.length > 0) {
+                dailyTabs[0].click(); // Activate the first day by default
+            }
+        }
+
 
         document.getElementById('btn-activity-ideas').addEventListener('click', async () => {
             showModal('💡 冰島活動靈感 (AI 支援)');
@@ -422,12 +428,9 @@
             showModal('🎒 行李打包建議 (精選)', preGeneratedPackingList, true);
         });
 
-        // To-Do List Logic
         function loadToDos() {
             const storedToDos = localStorage.getItem(TODO_STORAGE_KEY);
-            if (storedToDos) {
-                todos = JSON.parse(storedToDos);
-            }
+            if (storedToDos) todos = JSON.parse(storedToDos);
         }
 
         function saveToDos() {
@@ -435,152 +438,76 @@
         }
 
         function renderToDoList() {
-            const toDoListContainer = document.createElement('div');
-            toDoListContainer.id = 'todo-list-ui-container';
-
-            const inputGroup = document.createElement('div');
-            inputGroup.className = 'flex mb-4';
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.id = 'todo-input';
-            input.placeholder = '新增待辦事項...';
-            input.className = 'flex-grow p-2 border border-stone-300 rounded-l-md focus:ring-amber-500 focus:border-amber-500';
-            const addButton = document.createElement('button');
-            addButton.id = 'add-todo-btn';
-            addButton.textContent = '新增';
-            addButton.className = 'bg-amber-500 hover:bg-amber-600 text-white p-2 rounded-r-md focus:outline-none';
-            
-            inputGroup.appendChild(input);
-            inputGroup.appendChild(addButton);
-            toDoListContainer.appendChild(inputGroup);
-
-            const ul = document.createElement('ul');
-            ul.id = 'todo-items-list';
-            ul.className = 'space-y-2';
-
+            const c = document.createElement('div');
+            c.innerHTML = `<div class="flex mb-4"><input type="text" id="todo-input" placeholder="新增待辦事項..." class="flex-grow p-2 border border-stone-300 rounded-l-md focus:ring-amber-500 focus:border-amber-500"><button id="add-todo-btn" class="bg-amber-500 hover:bg-amber-600 text-white p-2 rounded-r-md focus:outline-none">新增</button></div><ul id="todo-items-list" class="space-y-2"></ul>`;
+            const ul = c.querySelector('#todo-items-list');
             todos.forEach(todo => {
                 const li = document.createElement('li');
                 li.className = `todo-item flex items-center justify-between p-2 border-b border-stone-200 ${todo.completed ? 'completed' : ''}`;
                 li.dataset.id = todo.id;
-
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.checked = todo.completed;
-                checkbox.className = 'form-checkbox h-5 w-5 text-amber-500 rounded focus:ring-amber-400 mr-3 cursor-pointer';
-                
-                const span = document.createElement('span');
-                span.textContent = todo.text;
-                span.className = 'flex-grow cursor-pointer';
-
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = '✕';
-                deleteButton.className = 'text-red-400 hover:text-red-600 font-semibold ml-3 focus:outline-none';
-
-                li.appendChild(checkbox);
-                li.appendChild(span);
-                li.appendChild(deleteButton);
+                li.innerHTML = `<input type="checkbox" ${todo.completed ? 'checked' : ''} class="form-checkbox h-5 w-5 text-amber-500 rounded focus:ring-amber-400 mr-3 cursor-pointer"><span class="flex-grow cursor-pointer">${todo.text}</span><button class="text-red-400 hover:text-red-600 font-semibold ml-3 focus:outline-none">✕</button>`;
                 ul.appendChild(li);
             });
-            toDoListContainer.appendChild(ul);
-            
-            addButton.addEventListener('click', () => {
-                const text = input.value.trim();
-                if (text) {
-                    addToDoItem(text);
-                    input.value = '';
-                }
+            c.querySelector('#add-todo-btn').addEventListener('click', () => {
+                const input = c.querySelector('#todo-input');
+                if (input.value.trim()) { addToDoItem(input.value.trim()); input.value = ''; }
             });
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    addButton.click();
-                }
-            });
-
+            c.querySelector('#todo-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') c.querySelector('#add-todo-btn').click(); });
             ul.addEventListener('click', (e) => {
-                const target = e.target;
-                const li = target.closest('li.todo-item');
-                if (!li) return;
-                const todoId = Number(li.dataset.id);
-
-                if (target.type === 'checkbox' || target.tagName === 'SPAN') {
-                    toggleComplete(todoId);
-                } else if (target.tagName === 'BUTTON') {
-                    deleteToDoItem(todoId);
-                }
+                const li = e.target.closest('li.todo-item'); if (!li) return; const id = Number(li.dataset.id);
+                if (e.target.type === 'checkbox' || e.target.tagName === 'SPAN') toggleComplete(id);
+                else if (e.target.tagName === 'BUTTON') deleteToDoItem(id);
             });
-            return toDoListContainer.innerHTML;
+            return c.innerHTML;
         }
         
-        function addToDoItem(text) {
-            todos.push({ id: Date.now(), text, completed: false });
-            saveToDos();
-            modalResponse.innerHTML = renderToDoList(); // Re-render inside modal
-        }
+        function addToDoItem(text) { todos.push({ id: Date.now(), text, completed: false }); saveToDos(); modalResponse.innerHTML = renderToDoList(); }
+        function toggleComplete(id) { const t = todos.find(x => x.id === id); if (t) t.completed = !t.completed; saveToDos(); modalResponse.innerHTML = renderToDoList(); }
+        function deleteToDoItem(id) { todos = todos.filter(t => t.id !== id); saveToDos(); modalResponse.innerHTML = renderToDoList(); }
 
-        function toggleComplete(id) {
-            const todo = todos.find(t => t.id === id);
-            if (todo) {
-                todo.completed = !todo.completed;
-                saveToDos();
-                modalResponse.innerHTML = renderToDoList(); // Re-render inside modal
-            }
-        }
-
-        function deleteToDoItem(id) {
-            todos = todos.filter(t => t.id !== id);
-            saveToDos();
-            modalResponse.innerHTML = renderToDoList(); // Re-render inside modal
-        }
-
-        document.getElementById('btn-todo-list').addEventListener('click', () => {
-            loadToDos(); // Load todos from localStorage
-            showModal('📋 行前待辦清單', renderToDoList(), true, true);
-        });
-
+        document.getElementById('btn-todo-list').addEventListener('click', () => { loadToDos(); showModal('📋 行前待辦清單', renderToDoList(), true, true); });
 
         document.addEventListener('DOMContentLoaded', () => {
-            const outboundContainer = document.getElementById('outbound-flights-container');
-            const returnContainer = document.getElementById('return-flights-container');
+            const outboundFlightsContainer = document.getElementById('outbound-flights-container');
+            const returnFlightsContainer = document.getElementById('return-flights-container');
             const notesList = document.getElementById('important-notes-list');
 
-            outboundContainer.innerHTML = ''; 
-            flightData.outbound.forEach(flight => {
-                outboundContainer.innerHTML += createFlightCard(flight);
-            });
+            flightData.outbound.forEach(flight => outboundFlightsContainer.innerHTML += createFlightCard(flight));
+            flightData.return.forEach(flight => returnFlightsContainer.innerHTML += createFlightCard(flight));
+            
+            notesList.innerHTML = ''; // Clear before re-populating
+            flightData.importantNotes.forEach(note => { const li = document.createElement('li'); li.textContent = note; notesList.appendChild(li); });
 
-            returnContainer.innerHTML = ''; 
-            flightData.return.forEach(flight => {
-                returnContainer.innerHTML += createFlightCard(flight);
-            });
+            const mainTabs = [
+                { btn: document.getElementById('main-tab-outbound'), content: document.getElementById('content-outbound') },
+                { btn: document.getElementById('main-tab-iceland'), content: document.getElementById('content-iceland') },
+                { btn: document.getElementById('main-tab-return'), content: document.getElementById('content-return') }
+            ];
 
-            notesList.innerHTML = ''; 
-            flightData.importantNotes.forEach(note => {
-                const li = document.createElement('li');
-                li.textContent = note;
-                notesList.appendChild(li);
+            mainTabs.forEach(tab => {
+                tab.btn.addEventListener('click', () => {
+                    mainTabs.forEach(t => {
+                        t.btn.classList.remove('main-tab-active');
+                        t.btn.classList.add('main-tab-inactive');
+                        t.content.classList.add('hidden');
+                    });
+                    tab.btn.classList.remove('main-tab-inactive');
+                    tab.btn.classList.add('main-tab-active');
+                    tab.content.classList.remove('hidden');
+                });
             });
+            
+            setupSubTabs('content-outbound', 'sub-tab-outbound', 'content-outbound-details');
+            setupSubTabs('content-return', 'sub-tab-return', 'content-return-details');
+            setupIcelandDailyTabs();
 
-            const tabOutbound = document.getElementById('tab-outbound');
-            const tabReturn = document.getElementById('tab-return');
-            const contentOutbound = document.getElementById('content-outbound');
-            const contentReturn = document.getElementById('content-return');
-
-            tabOutbound.addEventListener('click', () => {
-                contentOutbound.classList.remove('hidden');
-                contentReturn.classList.add('hidden');
-                tabOutbound.classList.replace('tab-inactive', 'tab-active');
-                tabReturn.classList.replace('tab-active', 'tab-inactive');
-            });
-
-            tabReturn.addEventListener('click', () => {
-                contentReturn.classList.remove('hidden');
-                contentOutbound.classList.add('hidden');
-                tabReturn.classList.replace('tab-inactive', 'tab-active');
-                tabOutbound.classList.replace('tab-active', 'tab-inactive');
-            });
+            // Activate the first main tab by default
+            if (mainTabs.length > 0) {
+                 mainTabs[0].btn.click();
+            }
 
             document.getElementById('currentYear').textContent = new Date().getFullYear();
-            loadToDos(); // Initial load of todos in case other parts of the script need them, though primary load is on button click for now.
+            loadToDos();
         });
     </script>
 </body>
