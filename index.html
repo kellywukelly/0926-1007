@@ -3,523 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台灣 ⇄ 冰島 航班行程互動總覽</title>
+    <title>冰島旅程互動儀表板 (最終整合版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: Slate & Sky (Background: slate-50, Text: slate-700, Accent: sky-600, Highlight: amber-500) -->
+    <!-- Application Structure Plan: A single-page dashboard combining the best of previous versions. It uses a three-tab main navigation: "航班總覽" (Flight Overview), "行程時間軸" (Itinerary Timeline), and "規劃與準備" (Planning & Prep). The "Flight Overview" tab isolates flight details. The "Itinerary Timeline" tab becomes the centerpiece, displaying the detailed vertical timeline for a chronological step-by-step view of the trip. The "Planning & Prep" tab consolidates all tools and auxiliary information (cost summary, assistants, important notes, car rental info). This structure provides the most logical separation of concerns for a user: checking travel logistics, following the day-to-day plan, and accessing preparation materials are three distinct user tasks, now mapped to three main tabs. -->
+    <!-- Visualization & Content Choices: Itinerary Data -> Goal: Organize/Follow -> Viz: Vertical Timeline with event cards. Interaction: Clickable links for external maps. Justification: Best reflects the user's detailed chronological plan. Flight Data -> Goal: Inform -> Viz: Flight cards. Justification: Clear and structured display. Prep Info -> Goal: Inform/Assist -> Viz: Styled cards and modal-triggered assistants. Justification: Groups tools and reference material logically. Library/Method: Vanilla JS, Tailwind. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
+        body { font-family: 'Inter', 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
+        .main-tab-active { color: #0284c7; border-color: #0284c7; }
+        .main-tab-inactive { color: #475569; border-color: transparent; }
+        .timeline-container::before {
+            content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+            top: 0; bottom: 0; width: 4px; background-color: #e2e8f0; border-radius: 2px;
         }
-        .main-tab-active {
-            border-color: #0284c7; /* sky-600 */
-            color: #0284c7; /* sky-600 */
-            background-color: #f0f9ff; /* sky-50 */
+        .timeline-item { position: relative; width: 50%; }
+        .timeline-item:nth-child(odd) { left: 0; padding-right: 2rem; text-align: right; }
+        .timeline-item:nth-child(even) { left: 50%; padding-left: 2rem; text-align: left; }
+        .timeline-dot {
+            position: absolute; top: 0.25rem; left: 50%; transform: translateX(-50%);
+            width: 1.25rem; height: 1.25rem; border-radius: 9999px; background-color: #fff; border: 4px solid #e2e8f0;
         }
-        .main-tab-inactive {
-            border-color: transparent;
-        }
-        .sub-tab-active {
-            background-color: #ccfbf1; /* teal-100 */
-            color: #0d9488; /* teal-600 */
-            border-color: #0d9488; /* teal-600 */
-        }
-        .sub-tab-inactive {
-            background-color: #f1f5f9; /* slate-100 */
-            color: #475569; /* slate-600 */
-            border-color: #e2e8f0; /* slate-300 */
-        }
-        .flight-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .flight-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        }
-        .modal {
-            transition: opacity 0.25s ease;
-        }
-        .modal-content {
-            transition: transform 0.25s ease;
-        }
-        .spinner {
-            border-top-color: #3498db;
-            animation: spinner 0.6s linear infinite;
-        }
-        @keyframes spinner {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-        .prose ul ul {
-            margin-top: 0.25em;
-            margin-bottom: 0.25em;
-        }
-        .todo-item.completed span {
-            text-decoration: line-through;
-            color: #a1a1aa; /* stone-400 */
+        .timeline-item:nth-child(odd) .timeline-content { float: right; }
+        .timeline-item:nth-child(even) .timeline-content { float: left; }
+        .modal { transition: opacity 0.25s ease; }
+        .modal-content { transition: transform 0.25s ease; }
+        .todo-item.completed span { text-decoration: line-through; color: #94a3b8; }
+
+        @media (max-width: 768px) {
+            .timeline-container::before { left: 1.25rem; transform: translateX(-50%); }
+            .timeline-item, .timeline-item:nth-child(even) { width: 100%; left: 0; padding-left: 3rem; padding-right: 0; text-align: left; }
+            .timeline-dot { left: 1.25rem; }
+            .timeline-item:nth-child(odd) .timeline-content, .timeline-item:nth-child(even) .timeline-content { float: none; }
         }
     </style>
 </head>
-<body class="bg-stone-100 text-stone-700 antialiased">
+<body class="bg-slate-50 text-slate-800">
 
-    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-5xl">
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl sm:text-4xl font-bold text-sky-700">台灣 ⇄ 冰島 夢幻航班行程 (9/26去-10/7抵台)</h1>
-            <p class="text-stone-600 mt-2">您的專屬航班計畫，一目了然，輕鬆啟程！</p>
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="mb-12 text-center">
+            <h1 class="text-3xl sm:text-4xl font-bold text-sky-700">冰島旅程互動儀表板</h1>
+            <p class="text-slate-600 mt-2">您的專屬航班、時間軸與規劃工具</p>
         </header>
 
+        <!-- Main Tabs Navigation -->
+        <div class="mb-8 border-b border-slate-300">
+            <nav class="-mb-px flex space-x-2 sm:space-x-6 justify-center" aria-label="Main Tabs">
+                <button data-tab="flights" class="main-tab-inactive whitespace-nowrap py-3 px-3 sm:px-4 border-b-2 font-semibold text-sm sm:text-base focus:outline-none">✈️ 航班總覽</button>
+                <button data-tab="timeline" class="main-tab-active whitespace-nowrap py-3 px-3 sm:px-4 border-b-2 font-semibold text-sm sm:text-base focus:outline-none">🗺️ 行程時間軸</button>
+                <button data-tab="prep" class="main-tab-inactive whitespace-nowrap py-3 px-3 sm:px-4 border-b-2 font-semibold text-sm sm:text-base focus:outline-none">🛠️ 規劃與準備</button>
+            </nav>
+        </div>
+
+        <!-- Main Content Area -->
         <main>
-            <div class="mb-6 sm:mb-8">
-                <div class="border-b border-stone-300">
-                    <nav class="-mb-px flex space-x-1 sm:space-x-2 md:space-x-4 justify-center" aria-label="Main Tabs">
-                        <button id="main-tab-outbound" class="main-tab-active whitespace-nowrap py-3 px-2 sm:px-4 md:px-6 border-b-2 font-medium text-xs sm:text-sm md:text-base rounded-t-md focus:outline-none">
-                            ✈️ 去程航班
-                        </button>
-                        <button id="main-tab-iceland" class="main-tab-inactive whitespace-nowrap py-3 px-2 sm:px-4 md:px-6 border-b-2 font-medium text-xs sm:text-sm md:text-base rounded-t-md hover:text-sky-600 hover:border-sky-300 focus:outline-none">
-                            🇮🇸 冰島每日行程
-                        </button>
-                        <button id="main-tab-return" class="main-tab-inactive whitespace-nowrap py-3 px-2 sm:px-4 md:px-6 border-b-2 font-medium text-xs sm:text-sm md:text-base rounded-t-md hover:text-sky-600 hover:border-sky-300 focus:outline-none">
-                            🏠 回程航班
-                        </button>
-                    </nav>
+            <!-- Flights Tab -->
+            <div id="flights-content" class="tab-panel hidden">
+                 <h2 class="text-2xl font-bold text-slate-700 mb-6 text-center">航班與過境資訊</h2>
+                 <div class="space-y-8">
+                    <div>
+                        <h3 class="text-xl font-semibold text-sky-700 mb-4 border-l-4 border-sky-500 pl-3">去程航班</h3>
+                        <div id="outbound-flights-container" class="space-y-6"></div>
+                    </div>
+                     <div>
+                        <h3 class="text-xl font-semibold text-sky-700 mb-4 border-l-4 border-sky-500 pl-3">回程航班</h3>
+                        <div id="return-flights-container" class="space-y-6"></div>
+                    </div>
+                 </div>
+            </div>
+
+            <!-- Timeline Tab -->
+            <div id="timeline-content" class="tab-panel">
+                 <h2 class="text-2xl font-bold text-slate-700 mb-6 text-center">行程時間軸</h2>
+                 <div id="timeline-container" class="relative timeline-container py-8">
+                    <!-- Timeline items will be injected here by JavaScript -->
                 </div>
             </div>
 
-            <div id="main-content-area">
-                <div id="content-outbound" class="main-tab-content-panel">
-                    <nav class="flex space-x-2 mb-4 border-b border-slate-200 pb-2">
-                        <button data-target="content-outbound-details" class="sub-tab-outbound sub-tab-active px-3 py-2 text-sm font-medium rounded-md">航班詳情</button>
-                        <button data-target="content-outbound-seattle" class="sub-tab-outbound sub-tab-inactive px-3 py-2 text-sm font-medium rounded-md">西雅圖 (過境)</button>
-                    </nav>
-                    <div id="content-outbound-details" class="sub-tab-content">
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-semibold text-sky-700 mb-1">啟程：踏上冰島的奇幻旅程</h2>
-                            <p class="text-stone-600 mb-6">以下是您從台灣出發，經西雅圖轉機前往冰島的航班詳細資訊。</p>
-                            <div id="outbound-flights-container" class="space-y-6"></div>
-                        </section>
+            <!-- Prep & Info Tab -->
+            <div id="prep-content" class="tab-panel hidden">
+                <h2 class="text-2xl font-bold text-slate-700 mb-6 text-center">規劃與準備中心</h2>
+                <div class="space-y-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-sky-500">
+                        <h3 class="text-xl font-semibold text-sky-700 mb-4">📊 行程總覽與預估</h3>
+                        <div class="space-y-3 text-slate-600">
+                            <div><span class="font-medium">預估機票總金額：</span><strong class="text-orange-600">NTD $41,555</strong></div>
+                            <div><span class="font-medium">美國簽證ESTA費用：</span><strong class="text-orange-600">USD $21</strong></div>
+                            <div><span class="font-medium">建議請假天數：</span><strong class="text-sky-600">5天半</strong> (依據9/26下午出發，10/7抵台估算)</div>
+                        </div>
                     </div>
-                    <div id="content-outbound-seattle" class="sub-tab-content hidden">
-                        <section class="mb-8 p-4 bg-white rounded-lg shadow">
-                            <h3 class="text-xl font-semibold text-sky-700 mb-3">西雅圖過境 (去程：9/26傍晚 - 9/27下午)</h3>
-                            <p class="text-stone-600 mb-2">您將在西雅圖停留約26小時50分鐘。這段時間您可以：</p>
-                            <ul class="list-disc pl-5 text-stone-600 space-y-1">
-                                <li>預訂機場附近的飯店好好休息。</li>
-                                <li>若時間充裕且精力許可，可考慮搭乘輕軌前往市區進行短暫觀光 (例如：派克市場、太空針塔附近)。</li>
-                                <li>確保已辦妥美國ESTA。</li>
-                                <li><strong class="text-amber-600">在此處記錄您的西雅圖住宿、交通或簡要計畫...</strong></li>
-                            </ul>
-                             <textarea placeholder="輸入您在西雅圖去程過境的筆記..." class="mt-4 w-full p-2 border border-stone-300 rounded-md h-32 focus:ring-sky-500 focus:border-sky-500"></textarea>
-                        </section>
+                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-amber-500">
+                        <h3 class="text-xl font-semibold text-amber-700 mb-4">✨ 旅程小幫手</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <button id="btn-activity-ideas" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition">💡 活動靈感 (AI)</button>
+                            <button id="btn-packing-list" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition">🎒 打包建議</button>
+                            <button id="btn-todo-list" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition">📋 待辦清單</button>
+                        </div>
                     </div>
-                </div>
-
-                <div id="content-iceland" class="main-tab-content-panel hidden">
-                    <section class="mb-8">
-                        <h2 class="text-2xl font-semibold text-teal-600 mb-1">🇮🇸 冰島每日行程 (9/28 - 10/5)</h2>
-                        <p class="text-stone-600 mb-4">規劃您在冰島的每一天！點擊下方日期查看或編輯當日行程。</p>
-                        <nav id="iceland-daily-nav" class="flex flex-wrap gap-2 mb-4 pb-2 border-b border-slate-200">
-                            </nav>
-                        <div id="iceland-daily-content-area">
-                            </div>
-                    </section>
-                </div>
-
-                <div id="content-return" class="main-tab-content-panel hidden">
-                     <nav class="flex space-x-2 mb-4 border-b border-slate-200 pb-2">
-                        <button data-target="content-return-details" class="sub-tab-return sub-tab-active px-3 py-2 text-sm font-medium rounded-md">航班詳情</button>
-                        <button data-target="content-return-seattle" class="sub-tab-return sub-tab-inactive px-3 py-2 text-sm font-medium rounded-md">西雅圖 (過境)</button>
-                    </nav>
-                    <div id="content-return-details" class="sub-tab-content">
-                        <section class="mb-8">
-                            <h2 class="text-2xl font-semibold text-sky-700 mb-1">歸途：滿載回憶返回家園</h2>
-                            <p class="text-stone-600 mb-6">結束了難忘的冰島之旅，這是您返回台灣的航班安排。</p>
-                            <div id="return-flights-container" class="space-y-6"></div>
-                        </section>
-                    </div>
-                     <div id="content-return-seattle" class="sub-tab-content hidden">
-                        <section class="mb-8 p-4 bg-white rounded-lg shadow">
-                            <h3 class="text-xl font-semibold text-sky-700 mb-3">西雅圖過境 (回程：10/5傍晚 - 10/6凌晨)</h3>
-                            <p class="text-stone-600 mb-2">您將在西雅圖停留約4小時35分鐘。這段時間主要用於機場內轉機：</p>
-                             <ul class="list-disc pl-5 text-stone-600 space-y-1">
-                                <li>遵循機場指示前往下一段航班的登機門。</li>
-                                <li>若有需要，可在機場免稅店稍作停留。</li>
-                                <li><strong class="text-amber-600">在此處記錄您的西雅圖回程過境的注意事項...</strong></li>
-                            </ul>
-                            <textarea placeholder="輸入您在西雅圖回程過境的筆記..." class="mt-4 w-full p-2 border border-stone-300 rounded-md h-32 focus:ring-sky-500 focus:border-sky-500"></textarea>
-                        </section>
+                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-slate-500">
+                        <h3 class="text-xl font-semibold text-slate-700 mb-4">📌 重要注意事項</h3>
+                        <div id="important-notes-container" class="prose prose-slate max-w-none text-slate-600"></div>
                     </div>
                 </div>
             </div>
-
-            <section class="bg-sky-50 p-6 rounded-lg shadow-md mb-8 border border-sky-200">
-                <h2 class="text-2xl font-semibold text-sky-700 mb-4">📊 行程總覽與預估</h2>
-                <div class="space-y-3 text-stone-700">
-                    <div>
-                        <span class="font-medium">預估機票總金額：</span>
-                        <span class="font-bold text-orange-600">NTD $41,555</span>
-                        <p class="text-xs text-stone-500 mt-1">（此為預估總金額，未含其他可能費用如機場稅、行李費、匯率浮動等，實際金額請依訂票時為準。）</p>
-                    </div>
-                    <div>
-                        <span class="font-medium">美國簽證ESTA費用：</span>
-                        <span class="font-bold text-orange-600">USD $21</span>
-                         <p class="text-xs text-stone-500 mt-1">（此為預估費用，實際金額請依申請時官方公告為準。）</p>
-                    </div>
-                    <div>
-                        <span class="font-medium">建議請假天數：</span>
-                        <span class="font-bold text-sky-600">5天半</span>
-                         <p class="text-xs text-stone-500 mt-1">（依據2025/09/26出發，2025/10/07抵台，10/08上班估算。此天數包含9/26下午出發及10/6全天。）</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="bg-white p-6 rounded-lg shadow-md mb-8">
-                <h2 class="text-2xl font-semibold text-sky-700 mb-1">✨ 旅程小幫手</h2>
-                <p class="text-stone-600 mb-6">為您的冰島之旅提供更多靈感與實用建議，並管理您的行前準備！</p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button id="btn-activity-ideas" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50">
-                        💡 活動靈感 (AI)
-                    </button>
-                    <button id="btn-packing-list" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50">
-                        🎒 打包建議 (精選)
-                    </button>
-                    <button id="btn-todo-list" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-50">
-                        📋 行前待辦清單
-                    </button>
-                </div>
-            </section>
-
-            <section class="bg-white p-6 rounded-lg shadow-md">
-                <h2 class="text-2xl font-semibold text-sky-700 mb-4">📌 重要注意事項</h2>
-                <div class="prose prose-stone max-w-none text-stone-600 space-y-3">
-                    <p>此處整理了您規劃行程時需要特別留意的資訊，請仔細閱讀，確保旅程順利愉快。</p>
-                    <ul id="important-notes-list" class="list-disc pl-5 space-y-2"></ul>
-                </div>
-            </section>
         </main>
-
-        <footer class="mt-12 text-center text-sm text-stone-500">
-            <p>&copy; <span id="currentYear"></span> 您的專屬行程規劃. 祝您旅途愉快！</p>
-        </footer>
     </div>
 
-    <div id="general-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden opacity-0">
+    <!-- Modal Structure -->
+    <div id="general-modal" class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 hidden opacity-0">
         <div class="modal-content bg-white rounded-lg shadow-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto transform scale-95">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="modal-title" class="text-xl font-semibold text-sky-700">AI 建議</h3>
-                <button id="modal-close-btn" class="text-stone-500 hover:text-stone-700 text-2xl focus:outline-none">&times;</button>
-            </div>
-            <div id="modal-body">
-                <div id="modal-loading" class="flex flex-col items-center justify-center py-8 hidden">
-                    <div class="spinner w-12 h-12 rounded-full border-4 border-stone-200"></div>
-                    <p class="mt-3 text-stone-600">正在向 AI 查詢，請稍候...</p>
-                </div>
-                <div id="modal-response" class="prose prose-stone max-w-none text-stone-600"></div>
+            <div class="flex justify-between items-center mb-4 border-b pb-3"><h3 id="modal-title" class="text-xl font-semibold text-sky-700">旅程小幫手</h3><button id="modal-close-btn" class="text-slate-500 hover:text-slate-700 text-2xl font-bold focus:outline-none">&times;</button></div>
+            <div id="modal-body" class="mt-4">
+                <div id="modal-loading" class="flex flex-col items-center justify-center py-8 hidden"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div><p class="mt-3 text-slate-600">正在向 AI 查詢...</p></div>
+                <div id="modal-response" class="prose prose-slate max-w-none text-slate-600"></div>
                 <div id="modal-error" class="text-red-600 bg-red-100 p-3 rounded-md hidden"></div>
             </div>
         </div>
     </div>
 
     <script>
-        const flightData = {
-            outbound: [
-                { segmentName: "1. 台灣 → 西雅圖", airline: "星宇航空 JX32", origin: { name: "台灣桃園", code: "TPE", flag: "🇹🇼" }, destination: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" }, departureDateTime: "2025/09/26 (週五) 晚上 08:10", arrivalDateTime: "2025/09/26 (週五) 下午 04:10", cost: "NTD$12648", remarks: "直飛。飛行時間約11小時。" },
-                { segmentName: "2. 西雅圖 → 冰島", airline: "冰島航空  FI682", origin: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" }, destination: { name: "冰島凱夫拉維克", code: "KEF", flag: "🇮🇸" }, departureDateTime: "2025/09/27 (週六) 下午 07:00", arrivalDateTime: "2025/09/28 (週日) 早上 09:25", cost: "USD$257.6", remarks: "直飛。飛行時間約7.5小時。<br>西雅圖轉機時間約26小時50分，需在西雅圖過夜。" }
+        const tripData = {
+            flights: [
+                { leg: 'outbound', segment: 1, segmentName: "1. 台灣 → 西雅圖", airline: "星宇航空 JX32", origin: { name: "台灣桃園", code: "TPE", flag: "🇹🇼" }, destination: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" }, departureDateTime: "2025/09/26 (週五) 晚上 08:10", arrivalDateTime: "2025/09/26 (週五) 下午 04:10", cost: "NTD$12648", remarks: "直飛。飛行時間約11小時。" },
+                { leg: 'outbound', segment: 2, segmentName: "2. 西雅圖 → 冰島", airline: "冰島航空  FI682", origin: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" }, destination: { name: "冰島凱夫拉維克", code: "KEF", flag: "�🇸" }, departureDateTime: "2025/09/27 (週六) 下午 07:00", arrivalDateTime: "2025/09/28 (週日) 早上 09:25", cost: "USD$257.6", remarks: "直飛。飛行時間約7.5小時。<br>西雅圖轉機時間約26小時50分，需在西雅圖過夜。" },
+                { leg: 'return', segment: 3, segmentName: "3. 冰島 → 西雅圖", airline: "冰島航空 FI683", origin: { name: "冰島凱夫拉維克", code: "KEF", flag: "🇮🇸" }, destination: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" }, departureDateTime: "2025/10/05 (週日) 晚上 07:45", arrivalDateTime: "2025/10/05 (週日) 晚上 08:40", cost: "約USD$290", remarks: "直飛。飛行時間約7小時55分鐘。" },
+                { leg: 'return', segment: 4, segmentName: "4. 西雅圖 → 台灣", airline: "星宇航空 JX31", origin: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" }, destination: { name: "台灣桃園", code: "TPE", flag: "🇹🇼" }, departureDateTime: "2025/10/06 (週一) 凌晨 01:15", arrivalDateTime: "2025/10/07 (週二) 凌晨 04:55", cost: "NTD$11168", remarks: "直飛。飛行時間約12小時40分。<br>西雅圖轉機時間約4小時35分鐘。<br>10/7凌晨抵台，當日需上班，可自行請假，請注意休息。" }
             ],
-            return: [
-                { segmentName: "3. 冰島 → 西雅圖", airline: "冰島航空 FI683", origin: { name: "冰島凱夫拉維克", code: "KEF", flag: "🇮🇸" }, destination: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" }, departureDateTime: "2025/10/05 (週日) 晚上 07:45", arrivalDateTime: "2025/10/05 (週日) 晚上 08:40", cost: "約USD$290", remarks: "直飛。飛行時間約7小時55分鐘。" },
-                { segmentName: "4. 西雅圖 → 台灣", airline: "星宇航空 JX31", origin: { name: "西雅圖塔科馬", code: "SEA", flag: "🇺🇸" }, destination: { name: "台灣桃園", code: "TPE", flag: "🇹🇼" }, departureDateTime: "2025/10/06 (週一) 凌晨 01:15", arrivalDateTime: "2025/10/07 (週二) 凌晨 04:55", cost: "NTD$11168", remarks: "直飛。飛行時間約12小時40分。<br>西雅圖轉機時間約4小時35分鐘。<br>10/7凌晨抵台，當日需上班，可自行請假，請注意休息。" }
+            timeline: [
+                { type: 'day_header', date: '2025/09/26 (五)', dayLabel: 'Day 1', title: '啟程日', events: [{ time: '20:10', type: 'flight', description: '台灣桃園 (TPE) 出發', details: '搭乘星宇航空前往西雅圖。' }, { time: '16:10', type: 'flight_arrival', description: '抵達西雅圖 (SEA)', details: '辦理入境手續。' }, { time: '傍晚', type: 'stay', description: '西雅圖住宿', details: '在西雅圖過夜，為隔天航班做準備。' }] },
+                { type: 'day_header', date: '2025/09/27 (六)', dayLabel: 'Day 2', title: '西雅圖轉機', events: [{ time: '白天', type: 'activity', description: '西雅圖自由活動', details: '可進行市區觀光或休息。' }, { time: '19:00', type: 'flight', description: '西雅圖 (SEA) 出發', details: '搭乘冰島航空飛往冰島 (KEF)。' }] },
+                { type: 'day_header', date: '2025/09/28 (日)', dayLabel: '冰島 Day 1', title: '黃金圈初探', events: [{ time: '09:25', type: 'flight_arrival', description: '抵達冰島 (KEF)', details: '預計至 12:00 完成出境與租車手續。' }, { time: '12:00-13:30', type: 'drive', description: '開車至黃金圈' }, { time: '13:30-14:00', type: 'activity', description: '火口湖 (Kerið)', link: 'https://maps.app.goo.gl/3yQWRJVix1B3RQot5' }, { time: '14:00-14:30', type: 'drive', description: '車程' }, { time: '14:30-15:30', type: 'activity', description: '間歇泉 (Strokkur)', link: 'https://maps.app.goo.gl/FcxjjY2f3CYD7sHd9' }, { time: '15:30-15:50', type: 'drive', description: '車程' }, { time: '15:50-17:00', type: 'activity', description: '古佛斯瀑布 (Gullfoss)', link: 'https://maps.app.goo.gl/Fd6PuqHVP4ySK8EYA' }, { time: '17:00-18:00', type: 'drive', description: '前往霍爾斯沃德呂爾' }, { time: '18:00-19:00', type: 'food', description: '超市採買', details: 'Krónan 超市，營業至 19:00。', link: 'https://maps.app.goo.gl/KGzob8RwEsHaoVhW9' }, { time: '19:00 後', type: 'stay', description: '入住 Asgard', details: '地址: QQ2Q+FJ2, 860 Hvolsvöllur, 冰島', link: 'https://www.google.com/maps/search/?api=1&query=Asgard, QQ2Q%2BFJ2, 860 Hvolsvöllur, Iceland' }] },
+                { type: 'day_header', date: '2025/09/29 (一)', dayLabel: '冰島 Day 2', title: '南部海岸至冰河湖', events: [{ time: '07:00-07:40', type: 'drive', description: '車程' }, { time: '07:40-08:30', type: 'activity', description: '斯科加爾瀑布 (彩虹瀑布)', link: 'https://maps.app.goo.gl/yzs3pgweuAQQtuFJ9' }, { time: '08:30-09:00', type: 'drive', description: '車程' }, { time: '09:00-10:00', type: 'activity', description: '黑沙灘 (Reynisfjara)', details: '注意瘋狗浪！', link: 'https://maps.app.goo.gl/fzRPSic7vYCnnX4D6' }, { time: '10:00-12:00', type: 'food', description: '維克鎮 (Vík) 用餐與採買' }, { time: '12:00-14:30', type: 'drive', description: '長途駕駛至冰河湖' }, { time: '14:30-18:00', type: 'activity', description: '傑古沙龍冰河湖 & 鑽石冰沙灘', link: 'https://maps.app.goo.gl/7UjcUFshiA9x5tBF7' }, { time: '18:00-18:30', type: 'drive', description: '前往住宿點' }, { time: '18:30 後', type: 'stay', description: '入住 Vagnsstadir Guesthouse', details: '地址: F985, 781 hornafjordur, 冰島', link: 'https://www.google.com/maps/search/?api=1&query=Vagnsstadir+Guesthouse' }] },
+                { type: 'day_header', date: '2025/09/30 (二)', dayLabel: '冰島 Day 3', title: '冰上活動與東部峽灣', events: [{ time: '07:00-09:30', type: 'prep', description: '起床、早餐、前往活動點' }, { time: '09:30-12:30', type: 'activity', description: '冰上摩托車' }, { time: '12:30-13:30', type: 'drive', description: '車程至赫本鎮' }, { time: '13:30-15:00', type: 'food', description: '赫本鎮 (Höfn) 用餐' }, { time: '15:00-15:30', type: 'drive', description: '車程至蝙蝠山' }, { time: '15:30-17:00', type: 'activity', description: '蝙蝠山 (Vestrahorn) & 維京部落', link: 'https://maps.app.goo.gl/AMCdonBKBpgXUYTj8' }, { time: '17:00-19:00', type: 'drive', description: '長途駕駛至住宿點' }, { time: '19:00 後', type: 'stay', description: '入住 Berunes HI Hostel', link: 'https://maps.app.goo.gl/79GzisudzJVPZCh16' }] },
+                { type: 'day_header', date: '2025/10/01 (三)', dayLabel: '冰島 Day 4', title: '東部峽灣至米湖', events: [{ time: '09:00-11:00', type: 'drive', description: '車程' }, { time: '11:00-11:30', type: 'activity', description: '古夫瀑布 (Gufufoss)' }, { time: '11:30-11:50', type: 'drive', description: '車程' }, { time: '11:50-15:00', type: 'food', description: '塞濟斯菲厄澤 (白日夢冒險小鎮)' }, { time: '15:00-15:30', type: 'drive', description: '車程' }, { time: '15:30-16:30', type: 'food', description: '埃伊爾斯塔濟採買' }, { time: '16:30-18:30', type: 'drive', description: '長途駕駛至米湖' }, { time: '18:30 後', type: 'stay', description: '入住 Dimmuborgir Guesthouse', link: 'https://maps.app.goo.gl/hzB53wA4CKcWUkwx8' }] },
+                { type: 'day_header', date: '2025/10/02 (四)', dayLabel: '冰島 Day 5', title: '米湖區域探索', events: [{ time: '上午', type: 'activity', description: '繞米湖 & 走步道', link: 'https://maps.app.goo.gl/p6ecqwxLjtnwrCxJ7' }, { time: '09:10-09:20', type: 'activity', description: '地洞溫泉 (Grjótagjá)', link: 'https://maps.app.goo.gl/cu6Lo7FwHhK747ey5' }, { time: '09:30-09:50', type: 'activity', description: '地熱谷 (Hverir)' , link: 'https://maps.app.goo.gl/nSKUtBTJnxYfJfTt9'}, { time: '10:00-12:30', type: 'activity', description: '米湖溫泉♨️ + 簡單午餐' }, { time: '12:30-13:20', type: 'drive', description: '車程' }, { time: '13:20-15:40', type: 'activity', description: '眾神瀑布 (Goðafoss)', link: 'https://maps.app.goo.gl/mykfQy7o293bruMn9' }, { time: '15:40-16:10', type: 'drive', description: '車程' }, { time: '16:10-16:30', type: 'food', description: '亞庫來歷小豬超市採買', link: 'https://maps.app.goo.gl/LoQN8z2PVeY7p1Qm6' }, { time: '晚上', type: 'stay', description: '尋找住宿點', details: '可考慮在亞庫來歷(Akureyri)或往西沿途尋找住宿。' }] },
+                { type: 'day_header', date: '2025/10/03 (五)', dayLabel: '冰島 Day 6', title: '斯奈山半島之旅', events: [{ time: '07:00-09:30', type: 'drive', description: '長途駕駛至斯奈山半島' }, { time: '09:30-10:30', type: 'activity', description: '教會山 (Kirkjufell)', link: 'https://maps.app.goo.gl/dT24ip891wvGLQgA6' }, { time: '11:00-11:30', type: 'activity', description: 'Ingjaldshóll Church (小紅屋)', link: 'https://maps.app.goo.gl/cmZkqnLourWXGbZXA' }, { time: '11:45-13:30', type: 'food', description: '歐拉夫斯維克 (Ólafsvík) 午餐', link: 'https://maps.app.goo.gl/xGPTWHffmCDdEWMP7' }, { time: '13:50-14:00', type: 'activity', description: '黑教堂 (Búðakirkja)', link: 'https://maps.app.goo.gl/P3tvTXq1piaSSNhN9' }, { time: '14:20-15:30', type: 'activity', description: '海豹沙灘 (Ytri Tunga)', link: 'https://maps.app.goo.gl/8tq33ZHYoBwtqRw9A' }, { time: '15:30-17:30', type: 'drive', description: '長途駕駛至首都' }, { time: '17:30 後', type: 'stay', description: '入住雷克雅維克' }] },
+                { type: 'day_header', date: '2025/10/04 (六)', dayLabel: '冰島 Day 7', title: '首都自由行', events: [{ type: 'plan', description: '此日行程待規劃...' }] },
+                { type: 'day_header', date: '2025/10/05 (日)', dayLabel: '冰島 Day 8', title: '首都觀光 & 歸途', events: [{ time: '19:45', type: 'flight', description: '從冰島 (KEF) 出發', details: '搭乘冰島航空返回西雅圖。' }] },
             ],
             importantNotes: [
-                "簽證與護照：請務必確認您的護照效期（通常建議行程結束後仍有6個月以上效期），並提前辦理所需簽證（美國ESTA及申根簽證）。",
-                { 
-                    type: "voltage_plug",
-                    text: "電壓與插座：冰島的標準電壓為 220V，頻率為 50Hz。插座類型為 F 型（雙圓孔，也稱為 Schuko），此類型插座亦相容於 C 型和 E 型插頭。建議攜帶通用轉換插頭以備不時之需。",
-                    imageUrl: "https://raw.githubusercontent.com/kellywukelly/0926-1007/main/Steckdose.jpg", 
-                    imageAlt: "F 型 (Schuko) 插座與插頭示意圖"
-                },
-                "轉機：國際轉機請預留充足時間，特別是不同航空公司。",
-                "住宿與當地交通：別忘了預訂在西雅圖（若過夜）及冰島的住宿與當地交通。",
-                "旅遊保險：強烈建議購買旅遊平安險及旅遊不便險。"
-            ],
-            icelandDays: ["2025/09/28", "2025/09/29", "2025/09/30", "2025/10/01", "2025/10/02", "2025/10/03", "2025/10/04", "2025/10/05"]
+                { type: 'text', content: '簽證與護照：請務必確認您的護照效期（通常建議行程結束後仍有6個月以上效期），並提前辦理所需簽證（美國ESTA及申根簽證）。'},
+                { type: "voltage_plug", text: "電壓與插座：冰島的標準電壓為 230V，頻率為 50Hz。插座類型為 F 型（雙圓孔），需要準備轉接頭。", imageUrl: "https://raw.githubusercontent.com/kellywukelly/0926-1007/main/Steckdose.jpg", imageAlt: "F 型 (Schuko) 插座與插頭示意圖"},
+                { type: 'text', content: '轉機：國際轉機請預留充足時間，特別是不同航空公司。'},
+                { type: 'text', content: '住宿與當地交通：別忘了預訂在西雅圖（若過夜）及冰島的住宿與當地交通。'},
+                { type: 'text', content: '旅遊保險：強烈建議購買旅遊平安險及旅遊不便險。'}
+            ]
         };
-
-        const preGeneratedPackingList = `
-            <h4 class="text-lg font-semibold text-emerald-700 mb-3">衣物 (洋蔥式穿搭為佳)：</h4>
-            <ul class="list-disc pl-5 space-y-1 mb-4">
-                <li><strong>底層 (吸濕排汗):</strong> <ul class="list-circle pl-5 space-y-0.5"><li>保暖內衣褲 (羊毛或機能性材質，2-3套)</li><li>長袖排汗衫 (2-3件)</li></ul></li>
-                <li><strong>中層 (保暖):</strong> <ul class="list-circle pl-5 space-y-0.5"><li>刷毛外套 (Fleece jacket，1-2件)</li><li>輕羽絨外套或背心 (方便攜帶，1件)</li><li>羊毛衫 (1-2件)</li></ul></li>
-                <li><strong>外層 (防風防水):</strong> <ul class="list-circle pl-5 space-y-0.5"><li>Gore-Tex 或類似材質的防水防風外套 (有帽佳，必備)</li><li>防水防風長褲 (雨褲或雪褲，必備)</li></ul></li>
-                <li><strong>一般衣物:</strong> <ul class="list-circle pl-5 space-y-0.5"><li>休閒長褲 (快乾材質為佳，1-2條，避免牛仔褲淋濕後難乾)</li><li>舒適上衣 (用於室內或較溫暖時)</li><li>睡衣 (保暖型)</li></ul></li>
-            </ul>
-            <h4 class="text-lg font-semibold text-emerald-700 mb-3">鞋襪：</h4><ul class="list-disc pl-5 space-y-1 mb-4"><li><strong>防水登山鞋 (高筒為佳，保護腳踝且防滑，必備):</strong> 已馴鞋，避免新鞋磨腳。</li><li><strong>保暖羊毛襪 (多雙):</strong> 保持腳部乾爽溫暖。</li><li>輕便休閒鞋 (用於城市、住宿點或飛機上，可選)</li></ul>
-            <h4 class="text-lg font-semibold text-emerald-700 mb-3">配件：</h4><ul class="list-disc pl-5 space-y-1 mb-4"><li><strong>保暖帽子 (能遮住耳朵，毛帽或防風帽，必備)</strong></li><li><strong>圍巾或魔術頭巾 (保暖頸部，防風，必備)</strong></li><li><strong>防水保暖手套 (必備，可考慮兩層：薄內層觸控，厚外層防水)</strong></li><li>太陽眼鏡 (雪地或低角度陽光反射強烈)</li><li>泳衣與快乾毛巾 (用於溫泉或地熱泳池)</li></ul>
-            <h4 class="text-lg font-semibold text-emerald-700 mb-3">個人用品：</h4><ul class="list-disc pl-5 space-y-1 mb-4"><li>盥洗用品 (牙刷、牙膏、洗面乳、洗髮精、沐浴乳等，部分冰島住宿不提供)</li><li>保養品 (保濕乳液、護唇膏、防曬乳 – 紫外線仍強)</li><li>個人藥品 (感冒藥、止痛藥、腸胃藥、暈車藥、OK繃及個人常備藥)</li><li>行動電源與充電線</li><li>轉換插頭 (歐洲規格，F型雙圓孔)</li><li>相機及備用電池、記憶卡</li><li>可重複使用的水瓶</li><li>小型後背包 (一日遊或健行時使用，最好有防水功能或背包雨罩)</li></ul>
-            <h4 class="text-lg font-semibold text-emerald-700 mb-3">其他建議：</h4><ul class="list-disc pl-5 space-y-1"><li>眼罩与耳塞</li><li>少量零食</li><li>塑胶袋数个</li><li>护照、签证、机票、住宿预订单、驾照 (国际驾照)、信用卡等重要文件影本或电子档备份</li></ul>
-            <p class="mt-4 text-sm text-stone-500"><strong>溫馨提示：</strong>九月底十月初的冰島天氣多變，日夜溫差大，且常有強風及降雨。請務必採取洋蔥式穿搭，並隨時注意天氣預報調整衣物。</p>
-        `;
-
-        let todos = [];
-        const TODO_STORAGE_KEY = 'icelandTripToDoList';
-
-        function createFlightCard(flight) {
-            return `
-                <div class="flight-card bg-white p-5 sm:p-6 rounded-lg shadow-lg border border-stone-200 hover:border-sky-300">
-                    <h3 class="text-xl font-semibold text-sky-700 mb-3">${flight.segmentName}</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm text-stone-600">
-                        <div><p class="font-medium text-stone-800">✈️ 航空公司/航班：</p><p>${flight.airline}</p></div>
-                        <div><p class="font-medium text-stone-800">💰 金額 (預估)：</p><p class="text-orange-600 font-semibold">${flight.cost}</p></div>
-                        <div class="sm:col-span-2 border-t border-stone-200 pt-4 mt-2"><div class="flex items-center justify-between space-x-2 sm:space-x-4">
-                            <div class="text-center flex-1"><p class="text-xs text-stone-500">出發</p><p class="font-semibold text-lg text-sky-600">${flight.origin.flag} ${flight.origin.code}</p><p class="text-xs">${flight.origin.name}</p><p class="text-xs mt-1">${flight.departureDateTime}</p></div>
-                            <div class="text-stone-400 text-2xl font-light self-center pb-5 sm:pb-6">→</div>
-                            <div class="text-center flex-1"><p class="text-xs text-stone-500">抵達</p><p class="font-semibold text-lg text-sky-600">${flight.destination.flag} ${flight.destination.code}</p><p class="text-xs">${flight.destination.name}</p><p class="text-xs mt-1">${flight.arrivalDateTime}</p></div>
-                        </div></div>
-                        <div class="sm:col-span-2 mt-2"><p class="font-medium text-stone-800">📝 備註：</p><p class="prose prose-sm max-w-none">${flight.remarks.replace(/<br>/g, '<br>')}</p></div>
-                    </div>
-                </div>`;
-        }
-
-        const generalModal = document.getElementById('general-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalCloseBtn = document.getElementById('modal-close-btn');
-        const modalLoading = document.getElementById('modal-loading');
-        const modalResponse = document.getElementById('modal-response');
-        const modalError = document.getElementById('modal-error');
-
-        function showModal(title, contentHTML = '', isStaticContent = false, isToDoList = false) {
-            modalTitle.textContent = title;
-            modalResponse.innerHTML = contentHTML;
-            modalError.classList.add('hidden');
-            modalError.textContent = '';
-            modalLoading.classList.add('hidden'); 
-            if (!isStaticContent && !isToDoList) { 
-                modalLoading.classList.remove('hidden');
-            }
-            generalModal.classList.remove('hidden');
-            setTimeout(() => generalModal.classList.remove('opacity-0'), 10);
-            setTimeout(() => document.querySelector('.modal-content').classList.remove('scale-95'), 10);
-        }
-
-        function hideModal() {
-            generalModal.classList.add('opacity-0');
-            document.querySelector('.modal-content').classList.add('scale-95');
-            setTimeout(() => generalModal.classList.add('hidden'), 250);
-        }
-
-        modalCloseBtn.addEventListener('click', hideModal);
-        generalModal.addEventListener('click', (event) => {
-            if (event.target === generalModal) hideModal();
-        });
-
-        async function callGeminiAPI(prompt) {
-            const apiKey = "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-            try {
-                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`API 請求失敗，狀態碼：${response.status}. ${errorData?.error?.message || '未知錯誤'}`);
-                }
-                const result = await response.json();
-                if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-                    return result.candidates[0].content.parts[0].text;
-                } else {
-                    throw new Error('從 API 收到的回應格式不符預期。');
-                }
-            } catch (error) {
-                console.error('呼叫 Gemini API 時發生錯誤:', error);
-                throw error;
-            }
-        }
-        
-        function setupSubTabs(mainTabContentId, subTabButtonClass, defaultActiveTarget) {
-            const subTabButtons = document.querySelectorAll(`#${mainTabContentId} .${subTabButtonClass}`);
-            const subTabContents = document.querySelectorAll(`#${mainTabContentId} .sub-tab-content`);
-
-            subTabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    subTabButtons.forEach(btn => {
-                        btn.classList.remove('sub-tab-active');
-                        btn.classList.add('sub-tab-inactive');
-                    });
-                    button.classList.remove('sub-tab-inactive');
-                    button.classList.add('sub-tab-active');
-
-                    const targetId = button.dataset.target;
-                    subTabContents.forEach(content => {
-                        if (content.id === targetId) {
-                            content.classList.remove('hidden');
-                        } else {
-                            content.classList.add('hidden');
-                        }
-                    });
-                });
-            });
-            if (defaultActiveTarget) {
-                document.querySelector(`#${mainTabContentId} button[data-target='${defaultActiveTarget}']`)?.click();
-            }
-        }
-
-        function setupIcelandDailyTabs() {
-            const navContainer = document.getElementById('iceland-daily-nav');
-            const contentArea = document.getElementById('iceland-daily-content-area');
-            navContainer.innerHTML = ''; 
-            contentArea.innerHTML = ''; 
-
-            flightData.icelandDays.forEach((dateStr, index) => {
-                const dateObj = new Date(dateStr);
-                const day = String(dateObj.getDate()).padStart(2, '0');
-                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                const shortDate = `${month}/${day}`;
-                const contentId = `content-iceland-day-${month}${day}`;
-
-                const button = document.createElement('button');
-                button.textContent = shortDate;
-                button.dataset.target = contentId;
-                button.className = `sub-tab-iceland-day ${index === 0 ? 'sub-tab-active' : 'sub-tab-inactive'} px-3 py-2 text-sm font-medium rounded-md border`;
-                navContainer.appendChild(button);
-
-                const div = document.createElement('div');
-                div.id = contentId;
-                div.className = `sub-tab-content p-4 bg-white rounded-lg shadow ${index !== 0 ? 'hidden' : ''}`;
-                div.innerHTML = `
-                    <h4 class="text-lg font-semibold text-teal-700 mb-3">冰島 ${dateStr} (${['日', '一', '二', '三', '四', '五', '六'][dateObj.getDay()]}) 行程</h4>
-                    <p class="text-stone-500 mb-2">您可以在這裡記錄當天的住宿、景點、餐廳、活動等計畫。</p>
-                    <textarea placeholder="輸入 ${shortDate} 的行程筆記..." class="w-full p-2 border border-stone-300 rounded-md h-48 focus:ring-teal-500 focus:border-teal-500"></textarea>
-                `;
-                contentArea.appendChild(div);
-            });
-            
-            const dailyTabs = document.querySelectorAll('.sub-tab-iceland-day');
-            dailyTabs.forEach(button => {
-                button.addEventListener('click', () => {
-                    dailyTabs.forEach(btn => {
-                        btn.classList.remove('sub-tab-active');
-                        btn.classList.add('sub-tab-inactive');
-                    });
-                    button.classList.remove('sub-tab-inactive');
-                    button.classList.add('sub-tab-active');
-                    
-                    document.querySelectorAll('#iceland-daily-content-area .sub-tab-content').forEach(content => content.classList.add('hidden'));
-                    document.getElementById(button.dataset.target).classList.remove('hidden');
-                });
-            });
-             if (dailyTabs.length > 0) {
-                dailyTabs[0].click(); 
-            }
-        }
-
-
-        document.getElementById('btn-activity-ideas').addEventListener('click', async () => {
-            showModal('💡 冰島活動靈感 (AI 支援)');
-            const prompt = "我將在9月底到10月初前往冰島旅遊。請推薦一些適合這個季節在冰島進行的活動和值得探訪的景點。請以條列式清單方式呈現，並簡短描述每個項目。";
-            try {
-                const ideasText = await callGeminiAPI(prompt);
-                modalResponse.innerHTML = ideasText.split('\n').map(line => {
-                    const trimmedLine = line.replace(/^[\-\*]\s*/, '').trim();
-                    if(trimmedLine) return `<p>${trimmedLine}</p>`;
-                    return '';
-                }).join('');
-            } catch (error) {
-                modalError.textContent = `無法取得活動建議：${error.message}`;
-                modalError.classList.remove('hidden');
-            } finally {
-                modalLoading.classList.add('hidden');
-            }
-        });
-
-        document.getElementById('btn-packing-list').addEventListener('click', () => {
-            showModal('🎒 行李打包建議 (精選)', preGeneratedPackingList, true);
-        });
-
-        function loadToDos() {
-            const storedToDos = localStorage.getItem(TODO_STORAGE_KEY);
-            if (storedToDos) todos = JSON.parse(storedToDos);
-        }
-
-        function saveToDos() {
-            localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(todos));
-        }
-
-        function renderToDoList() {
-            const c = document.createElement('div');
-            c.innerHTML = `<div class="flex mb-4"><input type="text" id="todo-input" placeholder="新增待辦事項..." class="flex-grow p-2 border border-stone-300 rounded-l-md focus:ring-amber-500 focus:border-amber-500"><button id="add-todo-btn" class="bg-amber-500 hover:bg-amber-600 text-white p-2 rounded-r-md focus:outline-none">新增</button></div><ul id="todo-items-list" class="space-y-2"></ul>`;
-            const ul = c.querySelector('#todo-items-list');
-            todos.forEach(todo => {
-                const li = document.createElement('li');
-                li.className = `todo-item flex items-center justify-between p-2 border-b border-stone-200 ${todo.completed ? 'completed' : ''}`;
-                li.dataset.id = todo.id;
-                li.innerHTML = `<input type="checkbox" ${todo.completed ? 'checked' : ''} class="form-checkbox h-5 w-5 text-amber-500 rounded focus:ring-amber-400 mr-3 cursor-pointer"><span class="flex-grow cursor-pointer">${todo.text}</span><button class="text-red-400 hover:text-red-600 font-semibold ml-3 focus:outline-none">✕</button>`;
-                ul.appendChild(li);
-            });
-            c.querySelector('#add-todo-btn').addEventListener('click', () => {
-                const input = c.querySelector('#todo-input');
-                if (input.value.trim()) { addToDoItem(input.value.trim()); input.value = ''; }
-            });
-            c.querySelector('#todo-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') c.querySelector('#add-todo-btn').click(); });
-            ul.addEventListener('click', (e) => {
-                const li = e.target.closest('li.todo-item'); if (!li) return; const id = Number(li.dataset.id);
-                if (e.target.type === 'checkbox' || e.target.tagName === 'SPAN') toggleComplete(id);
-                else if (e.target.tagName === 'BUTTON') deleteToDoItem(id);
-            });
-            return c.innerHTML;
-        }
-        
-        function addToDoItem(text) { todos.push({ id: Date.now(), text, completed: false }); saveToDos(); modalResponse.innerHTML = renderToDoList(); }
-        function toggleComplete(id) { const t = todos.find(x => x.id === id); if (t) t.completed = !t.completed; saveToDos(); modalResponse.innerHTML = renderToDoList(); }
-        function deleteToDoItem(id) { todos = todos.filter(t => t.id !== id); saveToDos(); modalResponse.innerHTML = renderToDoList(); }
-
-        document.getElementById('btn-todo-list').addEventListener('click', () => { loadToDos(); showModal('📋 行前待辦清單', renderToDoList(), true, true); });
+        const icons = { flight: '✈️', flight_arrival: '🛬', drive: '🚗', activity: '🏞️', food: '🍽️', stay: '🏠', prep: '📋', plan: '✏️' };
 
         document.addEventListener('DOMContentLoaded', () => {
+            const timelineContainer = document.getElementById('timeline-container');
             const outboundFlightsContainer = document.getElementById('outbound-flights-container');
             const returnFlightsContainer = document.getElementById('return-flights-container');
-            const notesList = document.getElementById('important-notes-list');
+            const notesContainer = document.getElementById('important-notes-container');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const generalModal = document.getElementById('general-modal');
 
-            flightData.outbound.forEach(flight => outboundFlightsContainer.innerHTML += createFlightCard(flight));
-            flightData.return.forEach(flight => returnFlightsContainer.innerHTML += createFlightCard(flight));
-            
-            notesList.innerHTML = ''; 
-            flightData.importantNotes.forEach(note => {
-                const li = document.createElement('li');
-                if (typeof note === 'string') {
-                    li.textContent = note;
-                } else if (typeof note === 'object' && note.type === 'voltage_plug') {
-                    li.innerHTML = `${note.text} <br><img src="${note.imageUrl}" alt="${note.imageAlt}" class="my-2 rounded-md shadow-sm max-w-xs mx-auto" style="max-height:100px;">`;
-                }
-                notesList.appendChild(li);
+            // Render Timeline
+            tripData.timeline.forEach((day) => {
+                const dayWrapper = document.createElement('div');
+                dayWrapper.className = 'timeline-item mb-8';
+                let eventsHTML = day.events.map(event => `
+                    <div class="flex items-start space-x-4 py-3 border-b border-slate-100 last:border-b-0">
+                        <div class="flex-shrink-0 w-20 text-right font-semibold text-sky-600">${event.time || ''}</div>
+                        <div class="flex-shrink-0 text-xl">${icons[event.type] || '➡️'}</div>
+                        <div class="flex-grow">
+                            <p class="font-semibold text-slate-800">${event.description}</p>
+                            ${event.details ? `<p class="text-sm text-slate-500 mt-1">${event.details}</p>` : ''}
+                            ${event.link ? `<a href="${event.link}" target="_blank" rel="noopener noreferrer" class="inline-block mt-2 text-xs bg-sky-100 text-sky-700 font-semibold px-3 py-1 rounded-full hover:bg-sky-200 transition">📍 在地圖上查看</a>` : ''}
+                        </div>
+                    </div>`).join('');
+                dayWrapper.innerHTML = `
+                    <div class="timeline-dot bg-sky-500 border-sky-200"></div>
+                    <div class="timeline-content w-full md:w-11/12 lg:w-10/12 bg-white p-4 sm:p-6 rounded-lg shadow-lg border border-slate-200">
+                        <div class="flex justify-between items-baseline mb-4">
+                            <span class="text-xs font-bold uppercase text-white bg-sky-600 px-2 py-1 rounded-md">${day.dayLabel}</span>
+                            <h2 class="text-xl sm:text-2xl font-bold text-slate-800">${day.title}</h2>
+                            <time class="text-sm font-semibold text-slate-500">${day.date}</time>
+                        </div>
+                        <div class="space-y-1">${eventsHTML}</div>
+                    </div>`;
+                timelineContainer.appendChild(dayWrapper);
             });
+            
+            // Render Flight Cards
+            const createFlightCard = (flight) => `<div class="bg-white p-5 sm:p-6 rounded-lg shadow-lg border border-slate-200"><h3 class="text-xl font-semibold text-sky-700 mb-3">${flight.segmentName}</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm text-slate-600"><div><p class="font-medium text-slate-800">✈️ 航空公司/航班：</p><p>${flight.airline}</p></div><div><p class="font-medium text-slate-800">💰 金額 (預估)：</p><p class="text-orange-600 font-semibold">${flight.cost}</p></div><div class="sm:col-span-2 border-t border-slate-200 pt-4 mt-2"><div class="flex items-center justify-between space-x-4"><div class="text-center flex-1"><p class="text-xs text-slate-500">出發</p><p class="font-semibold text-lg">${flight.origin.flag} ${flight.origin.code}</p><p class="text-xs">${flight.origin.name}</p><p class="text-xs mt-1">${flight.departureDateTime}</p></div><div class="text-slate-400 text-2xl">→</div><div class="text-center flex-1"><p class="text-xs text-slate-500">抵達</p><p class="font-semibold text-lg">${flight.destination.flag} ${flight.destination.code}</p><p class="text-xs">${flight.destination.name}</p><p class="text-xs mt-1">${flight.arrivalDateTime}</p></div></div></div><div class="sm:col-span-2 mt-2"><p class="font-medium text-slate-800">📝 備註：</p><p class="prose prose-sm max-w-none">${flight.remarks.replace(/<br>/g, '<br>')}</p></div></div></div>`;
+            outboundFlightsContainer.innerHTML = tripData.flights.filter(f => f.leg === 'outbound').map(createFlightCard).join('');
+            returnFlightsContainer.innerHTML = tripData.flights.filter(f => f.leg === 'return').map(createFlightCard).join('');
 
-            const mainTabs = [
-                { btn: document.getElementById('main-tab-outbound'), content: document.getElementById('content-outbound') },
-                { btn: document.getElementById('main-tab-iceland'), content: document.getElementById('content-iceland') },
-                { btn: document.getElementById('main-tab-return'), content: document.getElementById('content-return') }
-            ];
+            // Render Important Notes
+            const notesUl = document.createElement('ul');
+            notesUl.className = "list-disc pl-5 space-y-4";
+            tripData.importantNotes.forEach(note => {
+                const li = document.createElement('li');
+                if (note.type === 'voltage_plug') {
+                    li.innerHTML = `${note.text} <br><img src="${note.imageUrl}" alt="${note.imageAlt}" class="mt-2 rounded-md shadow-sm max-w-[200px]" onerror="this.onerror=null;this.src='https://placehold.co/200x150/E2E8F0/475569?text=插座圖片'">`;
+                } else {
+                    li.textContent = note.content;
+                }
+                notesUl.appendChild(li);
+            });
+            notesContainer.appendChild(notesUl);
 
-            mainTabs.forEach(tab => {
-                tab.btn.addEventListener('click', () => {
-                    mainTabs.forEach(t => {
-                        t.btn.classList.remove('main-tab-active');
-                        t.btn.classList.add('main-tab-inactive');
-                        t.content.classList.add('hidden');
-                    });
-                    tab.btn.classList.remove('main-tab-inactive');
-                    tab.btn.classList.add('main-tab-active');
-                    tab.content.classList.remove('hidden');
+            // Tab Switching Logic
+            const tabs = document.querySelectorAll('[data-tab]');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.replace('main-tab-active', 'main-tab-inactive'));
+                    tab.classList.replace('main-tab-inactive', 'main-tab-active');
+                    tabPanels.forEach(p => p.id === `${tab.dataset.tab}-content` ? p.classList.remove('hidden') : p.classList.add('hidden'));
                 });
             });
-            
-            setupSubTabs('content-outbound', 'sub-tab-outbound', 'content-outbound-details');
-            setupSubTabs('content-return', 'sub-tab-return', 'content-return-details');
-            setupIcelandDailyTabs();
-
-            if (mainTabs.length > 0) {
-                 mainTabs[0].btn.click();
-            }
-
+            document.querySelector('[data-tab="timeline"]').click();
             document.getElementById('currentYear').textContent = new Date().getFullYear();
-            loadToDos();
         });
     </script>
 </body>
 </html>
+�
