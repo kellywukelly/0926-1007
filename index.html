@@ -274,12 +274,13 @@
             }
 
             function renderFlights() {
-                const createFlightCard = (flight) => `<div class="bg-white p-5 sm:p-6 rounded-lg shadow-lg border border-slate-200"><h3 class="text-xl font-semibold text-sky-700 mb-3">${flight.segmentName}</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm text-slate-600"><div><p class="font-medium text-slate-800">✈️ 航空公司/航班：</p><p>${flight.airline}</p></div><div><p class="font-medium text-slate-800">� 金額 (預估)：</p><p class="text-orange-600 font-semibold">${flight.cost}</p></div><div class="sm:col-span-2 border-t border-slate-200 pt-4 mt-2"><div class="flex items-center justify-between space-x-4"><div class="text-center flex-1"><p class="text-xs text-slate-500">出發</p><p class="font-semibold text-lg">${flight.origin.flag} ${flight.origin.code}</p><p class="text-xs">${flight.origin.name}</p><p class="text-xs mt-1">${flight.departureDateTime}</p></div><div class="text-slate-400 text-2xl">→</div><div class="text-center flex-1"><p class="text-xs text-slate-500">抵達</p><p class="font-semibold text-lg">${flight.destination.flag} ${flight.destination.code}</p><p class="text-xs">${flight.destination.name}</p><p class="text-xs mt-1">${flight.arrivalDateTime}</p></div></div></div><div class="sm:col-span-2 mt-2"><p class="font-medium text-slate-800">📝 備註：</p><p class="prose prose-sm max-w-none">${flight.remarks.replace(/<br>/g, '<br>')}</p></div></div></div>`;
+                const createFlightCard = (flight) => `<div class="bg-white p-5 sm:p-6 rounded-lg shadow-lg border border-slate-200"><h3 class="text-xl font-semibold text-sky-700 mb-3">${flight.segmentName}</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm text-slate-600"><div><p class="font-medium text-slate-800">✈️ 航空公司/航班：</p><p>${flight.airline}</p></div><div><p class="font-medium text-slate-800">💰 金額 (預估)：</p><p class="text-orange-600 font-semibold">${flight.cost}</p></div><div class="sm:col-span-2 border-t border-slate-200 pt-4 mt-2"><div class="flex items-center justify-between space-x-4"><div class="text-center flex-1"><p class="text-xs text-slate-500">出發</p><p class="font-semibold text-lg">${flight.origin.flag} ${flight.origin.code}</p><p class="text-xs">${flight.origin.name}</p><p class="text-xs mt-1">${flight.departureDateTime}</p></div><div class="text-slate-400 text-2xl">→</div><div class="text-center flex-1"><p class="text-xs text-slate-500">抵達</p><p class="font-semibold text-lg">${flight.destination.flag} ${flight.destination.code}</p><p class="text-xs">${flight.destination.name}</p><p class="text-xs mt-1">${flight.arrivalDateTime}</p></div></div></div><div class="sm:col-span-2 mt-2"><p class="font-medium text-slate-800">📝 備註：</p><p class="prose prose-sm max-w-none">${flight.remarks.replace(/<br>/g, '<br>')}</p></div></div></div>`;
                 outboundFlightsContainer.innerHTML = tripData.flights.filter(f => f.leg === 'outbound').map(createFlightCard).join('');
                 returnFlightsContainer.innerHTML = tripData.flights.filter(f => f.leg === 'return').map(createFlightCard).join('');
             }
 
             function renderPrepTab() {
+                // Render Important Notes
                 const notesUl = document.createElement('ul');
                 notesUl.className = "list-disc pl-5 space-y-4";
                 tripData.importantNotes.forEach(note => {
@@ -293,15 +294,23 @@
                 });
                 notesContainer.innerHTML = '';
                 notesContainer.appendChild(notesUl);
+                // Render Souvenirs
                 souvenirsContainer.innerHTML = `
                     <ul class="list-disc pl-5 space-y-3">
                         <li><strong>冰島羊毛衣 (Lopapeysa)</strong>：最具代表性的紀念品，保暖且有獨特圖騰。</li>
                         <li><strong>戶外品牌服飾</strong>：如 66°North、Zo-On 等冰島本地品牌，兼具設計與功能性。</li>
-                        <li><strong>藍湖護膚品 (Blue Lagoon Skincare)</strong>：以藍湖的矽泥為主要成分，是極受歡迎的保養品。</li>
-                        <li><strong>巧克力與甘草糖 (Lakkrís)</strong>：Omnom 巧克力是知名品牌，而甘草糖則是冰島人的國民零食，口味特殊，值得一試。</li>
+                        <li><strong>Mills 魚子醬</strong>：牙膏狀的魚子醬，在超市就能買到，是便宜又特別的伴手禮。</li>
+                        <li><strong>火山食用鹽 (Lava Salt)</strong>：黑色的鹽，充滿視覺效果與冰島特色。</li>
+                        <li><strong>泡澡＆泡腳鹽</strong>：含有冰島地熱礦物質的浴鹽，適合送禮自用。</li>
+                        <li><strong>草本茶 (Herbal Tea)</strong>：冰島當地品牌的特色草本茶，包裝精美。</li>
+                        <li><strong>LYSI魚油</strong>：冰島國民保健品，品質優良。</li>
+                        <li><strong>Einstök 啤酒</strong>：冰島本地的精釀啤酒，有多種口味。</li>
+                        <li><strong>巧克力 (Omnom)</strong>：包裝設計精美的冰島知名巧克力品牌。</li>
                         <li><strong>Puffin 相關商品</strong>：以可愛的國鳥帕芬鳥為主題的各種玩偶、飾品、紀念品。</li>
-                        <li><strong>火山熔岩飾品</strong>：使用當地火山岩製作的項鍊、手環等，充滿冰島特色。</li>
-                    </ul>`;
+                        <li><strong>火山熔岩飾品</strong>：使用當地火山岩製作的項鍊、手環等。</li>
+                        <li><strong>磁鐵明信片</strong>：最基本也最受歡迎的紀念品。</li>
+                    </ul>
+                    <p class="mt-4 text-sm text-stone-500"><strong>參考資料：</strong> <a href="https://shiningchan.com/blog/post/iceland-souvenirs-recommendation/" target="_blank" class="text-sky-600 hover:underline">Shining Chan's Blog</a></p>`;
             }
             
             // --- EVENT LISTENERS ---
@@ -345,4 +354,3 @@
     </script>
 </body>
 </html>
-�
