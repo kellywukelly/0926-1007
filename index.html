@@ -6,7 +6,7 @@
     <title>冰島旅程互動儀表板 (最終整合版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chosen Palette: Slate & Sky (Background: slate-50, Text: slate-700, Accent: sky-600, Highlight: amber-500) -->
-    <!-- Application Structure Plan: A single-page dashboard combining the best of previous versions. It uses a three-tab main navigation: "航班總覽" (Flight Overview), "行程時間軸" (Itinerary Timeline), and "規劃與準備" (Planning & Prep). The "Flight Overview" tab isolates flight details. The "Itinerary Timeline" tab becomes the centerpiece, displaying the detailed vertical timeline for a chronological step-by-step view of the trip. The "Planning & Prep" tab consolidates all tools and auxiliary information (cost summary, assistants, important notes, car rental info). This structure provides the most logical separation of concerns for a user: checking travel logistics, following the day-to-day plan, and accessing preparation materials are three distinct user tasks, now mapped to three main tabs. -->
+    <!-- Application Structure Plan: A single-page dashboard combining the best of previous versions. It uses a three-tab main navigation: "航班總覽" (Flight Overview), "行程時間軸" (Itinerary Timeline), and "規劃與準備" (Planning & Prep). The "Flight Overview" tab isolates flight details. The "Itinerary Timeline" tab becomes the centerpiece, displaying the detailed vertical timeline for a chronological step-by-step view of the trip. The "Planning & Prep" tab consolidates all tools and auxiliary information (cost summary, assistants, important notes, car rental info, and a new souvenirs section). This structure provides the most logical separation of concerns for a user: checking travel logistics, following the day-to-day plan, and accessing preparation materials are three distinct user tasks, now mapped to three main tabs. -->
     <!-- Visualization & Content Choices: Itinerary Data -> Goal: Organize/Follow -> Viz: Vertical Timeline with event cards. Interaction: Clickable links for external maps. Justification: Best reflects the user's detailed chronological plan. Flight Data -> Goal: Inform -> Viz: Flight cards. Justification: Clear and structured display. Prep Info -> Goal: Inform/Assist -> Viz: Styled cards and modal-triggered assistants. Justification: Groups tools and reference material logically. Library/Method: Vanilla JS, Tailwind. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
@@ -154,6 +154,54 @@
             ]
         };
         const icons = { flight: '✈️', flight_arrival: '🛬', drive: '🚗', activity: '🏞️', food: '🍽️', stay: '🏠', prep: '📋', plan: '✏️' };
+        
+        const preGeneratedPackingList = `
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">證件與文件</h4>
+            <ul class="list-disc pl-5 space-y-1 mb-4">
+                <li>護照（有效期6個月以上）、國際駕照、台灣駕照正本</li>
+                <li>機票、住宿、租車等預訂確認信</li>
+                <li>旅遊保險資料</li>
+                <li>信用卡（有PIN碼）、少量現金（歐元/冰島克朗）</li>
+                <li>緊急聯絡資訊</li>
+            </ul>
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">衣物</h4>
+            <ul class="list-disc pl-5 space-y-1 mb-4">
+                <li>發熱衣、保暖內衣、毛衣/抓絨衣</li>
+                <li>羽絨外套或厚外套、防水防風外套、防水長褲/登山褲</li>
+                <li>保暖褲/內搭褲、T恤/內搭上衣</li>
+                <li>保暖襪（羊毛襪）、內衣褲、睡衣</li>
+                <li>毛帽、圍巾、手套、太陽眼鏡、泳衣、拖鞋/涼鞋</li>
+            </ul>
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">鞋類</h4>
+            <ul class="list-disc pl-5 space-y-1 mb-4">
+                <li>防水登山鞋/健行鞋</li>
+                <li>輕便鞋</li>
+            </ul>
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">洗漱與個人用品</h4>
+            <ul class="list-disc pl-5 space-y-1 mb-4">
+                <li>牙刷、牙膏、梳子、洗面乳、洗髮精、沐浴乳、毛巾</li>
+                <li>保濕乳液、護唇膏、防曬乳、指甲剪</li>
+                <li>隱形眼鏡及藥水/眼鏡</li>
+                <li>個人藥品、小包衛生紙、濕紙巾、木瓜霜/凡士林</li>
+            </ul>
+             <h4 class="text-lg font-semibold text-emerald-700 mb-3">電子產品</h4>
+            <ul class="list-disc pl-5 space-y-1 mb-4">
+                <li>手機與充電器、相機/鏡頭/記憶卡/備用電池</li>
+                <li>行動電源、歐規轉接頭、車用充電器</li>
+                <li>耳機、手電筒/頭燈、筆電/平板（如需）</li>
+            </ul>
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">旅行與自駕裝備</h4>
+            <ul class="list-disc pl-5 space-y-1 mb-4">
+                <li>輕便背包、行李箱/大背包、水壺（保溫瓶）</li>
+                <li>小型急救包、雨衣/雨褲、防水袋/收納袋</li>
+                <li>眼罩、耳塞、食物/零食、旅行用餐具</li>
+                <li>車用充電器、保冷袋、夾鍊袋</li>
+            </ul>
+            <h4 class="text-lg font-semibold text-emerald-700 mb-3">其他建議</h4>
+            <ul class="list-disc pl-5 space-y-1">
+                <li>極光攝影用三腳架</li>
+                <li>筆記本、筆、輕便購物袋、書/電子書</li>
+            </ul>`;
 
         document.addEventListener('DOMContentLoaded', () => {
             const timelineContainer = document.getElementById('timeline-container');
@@ -163,65 +211,125 @@
             const souvenirsContainer = document.getElementById('souvenirs-container');
             const modalCloseBtn = document.getElementById('modal-close-btn');
             const generalModal = document.getElementById('general-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalResponse = document.getElementById('modal-response');
+            const modalLoading = document.getElementById('modal-loading');
+            const modalError = document.getElementById('modal-error');
 
-            // Render Timeline
-            tripData.timeline.forEach((day) => {
-                const dayWrapper = document.createElement('div');
-                dayWrapper.className = 'timeline-item mb-8';
-                let eventsHTML = day.events.map(event => `
-                    <div class="flex items-start space-x-4 py-3 border-b border-slate-100 last:border-b-0">
-                        <div class="flex-shrink-0 w-20 text-right font-semibold text-sky-600">${event.time || ''}</div>
-                        <div class="flex-shrink-0 text-xl">${icons[event.type] || '➡️'}</div>
-                        <div class="flex-grow">
-                            <p class="font-semibold text-slate-800">${event.description}</p>
-                            ${event.details ? `<p class="text-sm text-slate-500 mt-1">${event.details}</p>` : ''}
-                            ${event.link ? `<a href="${event.link}" target="_blank" rel="noopener noreferrer" class="inline-block mt-2 text-xs bg-sky-100 text-sky-700 font-semibold px-3 py-1 rounded-full hover:bg-sky-200 transition">📍 在地圖上查看</a>` : ''}
-                        </div>
-                    </div>`).join('');
-                dayWrapper.innerHTML = `
-                    <div class="timeline-dot bg-sky-500 border-sky-200"></div>
-                    <div class="timeline-content w-full md:w-11/12 lg:w-10/12 bg-white p-4 sm:p-6 rounded-lg shadow-lg border border-slate-200">
-                        <div class="flex justify-between items-baseline mb-4">
-                            <span class="text-xs font-bold uppercase text-white bg-sky-600 px-2 py-1 rounded-md">${day.dayLabel}</span>
-                            <h2 class="text-xl sm:text-2xl font-bold text-slate-800">${day.title}</h2>
-                            <time class="text-sm font-semibold text-slate-500">${day.date}</time>
-                        </div>
-                        <div class="space-y-1">${eventsHTML}</div>
-                    </div>`;
+            // --- MODAL FUNCTIONS ---
+            function showModal(title, contentHTML = '', isStaticContent = false) {
+                modalTitle.textContent = title;
+                modalResponse.innerHTML = contentHTML;
+                modalError.classList.add('hidden');
+                modalError.textContent = '';
+                modalLoading.classList.add('hidden');
+                if (!isStaticContent) {
+                    modalLoading.classList.remove('hidden');
+                }
+                generalModal.classList.remove('hidden');
+                setTimeout(() => generalModal.classList.remove('opacity-0'), 10);
+                setTimeout(() => document.querySelector('.modal-content').classList.remove('scale-95'), 10);
+            }
+
+            function hideModal() {
+                generalModal.classList.add('opacity-0');
+                document.querySelector('.modal-content').classList.add('scale-95');
+                setTimeout(() => generalModal.classList.add('hidden'), 250);
+            }
+
+            modalCloseBtn.addEventListener('click', hideModal);
+            generalModal.addEventListener('click', (event) => {
+                if (event.target === generalModal) hideModal();
+            });
+
+
+            // --- DATA RENDERING FUNCTIONS ---
+            function renderTimeline() {
+                timelineContainer.innerHTML = '';
+                tripData.timeline.forEach((day) => {
+                    const dayWrapper = document.createElement('div');
+                    dayWrapper.className = 'timeline-item mb-8';
+                    let eventsHTML = day.events.map(event => `
+                        <div class="flex items-start space-x-4 py-3 border-b border-slate-100 last:border-b-0">
+                            <div class="flex-shrink-0 w-20 text-right font-semibold text-sky-600">${event.time || ''}</div>
+                            <div class="flex-shrink-0 text-xl">${icons[event.type] || '➡️'}</div>
+                            <div class="flex-grow">
+                                <p class="font-semibold text-slate-800">${event.description}</p>
+                                ${event.details ? `<p class="text-sm text-slate-500 mt-1">${event.details}</p>` : ''}
+                                ${event.link ? `<a href="${event.link}" target="_blank" rel="noopener noreferrer" class="inline-block mt-2 text-xs bg-sky-100 text-sky-700 font-semibold px-3 py-1 rounded-full hover:bg-sky-200 transition">📍 在地圖上查看</a>` : ''}
+                            </div>
+                        </div>`).join('');
+                    dayWrapper.innerHTML = `
+                        <div class="timeline-dot bg-sky-500 border-sky-200"></div>
+                        <div class="timeline-content w-full md:w-11/12 lg:w-10/12 bg-white p-4 sm:p-6 rounded-lg shadow-lg border border-slate-200">
+                            <div class="flex justify-between items-baseline mb-4">
+                                <span class="text-xs font-bold uppercase text-white bg-sky-600 px-2 py-1 rounded-md">${day.dayLabel}</span>
+                                <h2 class="text-xl sm:text-2xl font-bold text-slate-800">${day.title}</h2>
+                                <time class="text-sm font-semibold text-slate-500">${day.date}</time>
+                            </div>
+                            <div class="space-y-1">${eventsHTML}</div>
+                        </div>`;
                 timelineContainer.appendChild(dayWrapper);
             });
+            }
+
+            function renderFlights() {
+                const createFlightCard = (flight) => `<div class="bg-white p-5 sm:p-6 rounded-lg shadow-lg border border-slate-200"><h3 class="text-xl font-semibold text-sky-700 mb-3">${flight.segmentName}</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm text-slate-600"><div><p class="font-medium text-slate-800">✈️ 航空公司/航班：</p><p>${flight.airline}</p></div><div><p class="font-medium text-slate-800">� 金額 (預估)：</p><p class="text-orange-600 font-semibold">${flight.cost}</p></div><div class="sm:col-span-2 border-t border-slate-200 pt-4 mt-2"><div class="flex items-center justify-between space-x-4"><div class="text-center flex-1"><p class="text-xs text-slate-500">出發</p><p class="font-semibold text-lg">${flight.origin.flag} ${flight.origin.code}</p><p class="text-xs">${flight.origin.name}</p><p class="text-xs mt-1">${flight.departureDateTime}</p></div><div class="text-slate-400 text-2xl">→</div><div class="text-center flex-1"><p class="text-xs text-slate-500">抵達</p><p class="font-semibold text-lg">${flight.destination.flag} ${flight.destination.code}</p><p class="text-xs">${flight.destination.name}</p><p class="text-xs mt-1">${flight.arrivalDateTime}</p></div></div></div><div class="sm:col-span-2 mt-2"><p class="font-medium text-slate-800">📝 備註：</p><p class="prose prose-sm max-w-none">${flight.remarks.replace(/<br>/g, '<br>')}</p></div></div></div>`;
+                outboundFlightsContainer.innerHTML = tripData.flights.filter(f => f.leg === 'outbound').map(createFlightCard).join('');
+                returnFlightsContainer.innerHTML = tripData.flights.filter(f => f.leg === 'return').map(createFlightCard).join('');
+            }
+
+            function renderPrepTab() {
+                const notesUl = document.createElement('ul');
+                notesUl.className = "list-disc pl-5 space-y-4";
+                tripData.importantNotes.forEach(note => {
+                    const li = document.createElement('li');
+                    if (note.type === 'voltage_plug') {
+                        li.innerHTML = `${note.text} <br><img src="${note.imageUrl}" alt="${note.imageAlt}" class="mt-2 rounded-md shadow-sm max-w-[200px]" onerror="this.onerror=null;this.src='https://placehold.co/200x150/E2E8F0/475569?text=插座圖片'">`;
+                    } else {
+                        li.textContent = note.content;
+                    }
+                    notesUl.appendChild(li);
+                });
+                notesContainer.innerHTML = '';
+                notesContainer.appendChild(notesUl);
+                souvenirsContainer.innerHTML = `
+                    <ul class="list-disc pl-5 space-y-3">
+                        <li><strong>冰島羊毛衣 (Lopapeysa)</strong>：最具代表性的紀念品，保暖且有獨特圖騰。</li>
+                        <li><strong>戶外品牌服飾</strong>：如 66°North、Zo-On 等冰島本地品牌，兼具設計與功能性。</li>
+                        <li><strong>藍湖護膚品 (Blue Lagoon Skincare)</strong>：以藍湖的矽泥為主要成分，是極受歡迎的保養品。</li>
+                        <li><strong>巧克力與甘草糖 (Lakkrís)</strong>：Omnom 巧克力是知名品牌，而甘草糖則是冰島人的國民零食，口味特殊，值得一試。</li>
+                        <li><strong>Puffin 相關商品</strong>：以可愛的國鳥帕芬鳥為主題的各種玩偶、飾品、紀念品。</li>
+                        <li><strong>火山熔岩飾品</strong>：使用當地火山岩製作的項鍊、手環等，充滿冰島特色。</li>
+                    </ul>`;
+            }
             
-            // Render Flight Cards
-            const createFlightCard = (flight) => `<div class="bg-white p-5 sm:p-6 rounded-lg shadow-lg border border-slate-200"><h3 class="text-xl font-semibold text-sky-700 mb-3">${flight.segmentName}</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm text-slate-600"><div><p class="font-medium text-slate-800">✈️ 航空公司/航班：</p><p>${flight.airline}</p></div><div><p class="font-medium text-slate-800">💰 金額 (預估)：</p><p class="text-orange-600 font-semibold">${flight.cost}</p></div><div class="sm:col-span-2 border-t border-slate-200 pt-4 mt-2"><div class="flex items-center justify-between space-x-4"><div class="text-center flex-1"><p class="text-xs text-slate-500">出發</p><p class="font-semibold text-lg">${flight.origin.flag} ${flight.origin.code}</p><p class="text-xs">${flight.origin.name}</p><p class="text-xs mt-1">${flight.departureDateTime}</p></div><div class="text-slate-400 text-2xl">→</div><div class="text-center flex-1"><p class="text-xs text-slate-500">抵達</p><p class="font-semibold text-lg">${flight.destination.flag} ${flight.destination.code}</p><p class="text-xs">${flight.destination.name}</p><p class="text-xs mt-1">${flight.arrivalDateTime}</p></div></div></div><div class="sm:col-span-2 mt-2"><p class="font-medium text-slate-800">📝 備註：</p><p class="prose prose-sm max-w-none">${flight.remarks.replace(/<br>/g, '<br>')}</p></div></div></div>`;
-            outboundFlightsContainer.innerHTML = tripData.flights.filter(f => f.leg === 'outbound').map(createFlightCard).join('');
-            returnFlightsContainer.innerHTML = tripData.flights.filter(f => f.leg === 'return').map(createFlightCard).join('');
-
-            // Render Important Notes
-            const notesUl = document.createElement('ul');
-            notesUl.className = "list-disc pl-5 space-y-4";
-            tripData.importantNotes.forEach(note => {
-                const li = document.createElement('li');
-                if (note.type === 'voltage_plug') {
-                    li.innerHTML = `${note.text} <br><img src="${note.imageUrl}" alt="${note.imageAlt}" class="mt-2 rounded-md shadow-sm max-w-[200px]" onerror="this.onerror=null;this.src='https://placehold.co/200x150/E2E8F0/475569?text=插座圖片'">`;
-                } else {
-                    li.textContent = note.content;
+            // --- EVENT LISTENERS ---
+            document.getElementById('btn-activity-ideas').addEventListener('click', async () => {
+                showModal('💡 活動靈感 (AI 支援)');
+                const prompt = "我將在9月底到10月初前往冰島旅遊。請推薦一些適合這個季節在冰島進行的活動和值得探訪的景點。請以條列式清單方式呈現，並簡短描述每個項目。";
+                try {
+                    const ideasText = "This is a placeholder for the Gemini API response. Replace with actual API call if needed."; // Placeholder
+                    modalResponse.innerHTML = ideasText.split('\n').map(line => `<p>${line.replace(/^[\-\*]\s*/, '')}</p>`).join('');
+                } catch (error) {
+                    modalError.textContent = `無法取得活動建議：${error.message}`;
+                    modalError.classList.remove('hidden');
+                } finally {
+                    modalLoading.classList.add('hidden');
                 }
-                notesUl.appendChild(li);
             });
-            notesContainer.appendChild(notesUl);
-
-            // Render Souvenirs
-            souvenirsContainer.innerHTML = `
-                <ul class="list-disc pl-5 space-y-3">
-                    <li><strong>冰島羊毛衣 (Lopapeysa)</strong>：最具代表性的紀念品，保暖且有獨特圖騰。</li>
-                    <li><strong>戶外品牌服飾</strong>：如 66°North、Zo-On 等冰島本地品牌，兼具設計與功能性。</li>
-                    <li><strong>藍湖護膚品 (Blue Lagoon Skincare)</strong>：以藍湖的矽泥為主要成分，是極受歡迎的保養品。</li>
-                    <li><strong>巧克力與甘草糖 (Lakkrís)</strong>：Omnom 巧克力是知名品牌，而甘草糖則是冰島人的國民零食，口味特殊，值得一試。</li>
-                    <li><strong>Puffin 相關商品</strong>：以可愛的國鳥帕芬鳥為主題的各種玩偶、飾品、紀念品。</li>
-                    <li><strong>火山熔岩飾品</strong>：使用當地火山岩製作的項鍊、手環等，充滿冰島特色。</li>
-                </ul>`;
-
-            // Tab Switching Logic
+            document.getElementById('btn-packing-list').addEventListener('click', () => {
+                showModal('🎒 打包建議', preGeneratedPackingList, true);
+            });
+            document.getElementById('btn-todo-list').addEventListener('click', () => {
+                showModal('📋 待辦清單', '待辦清單功能建構中...', true);
+            });
+            
+            // --- INITIALIZATION ---
+            renderTimeline();
+            renderFlights();
+            renderPrepTab();
+            
             const tabs = document.querySelectorAll('[data-tab]');
             const tabPanels = document.querySelectorAll('.tab-panel');
             tabs.forEach(tab => {
@@ -237,3 +345,4 @@
     </script>
 </body>
 </html>
+�
