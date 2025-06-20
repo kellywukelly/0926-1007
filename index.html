@@ -6,7 +6,7 @@
     <title>冰島旅程互動儀表板 (最終整合版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chosen Palette: Slate & Sky (Background: slate-50, Text: slate-700, Accent: sky-600, Highlight: amber-500) -->
-    <!-- Application Structure Plan: A single-page dashboard combining the best of previous versions. It uses a three-tab main navigation: "航班總覽" (Flight Overview), "行程時間軸" (Itinerary Timeline), and "規劃與準備" (Planning & Prep). The "Flight Overview" tab isolates flight details. The "Itinerary Timeline" tab becomes the centerpiece, displaying the detailed vertical timeline for a chronological step-by-step view of the trip. The "Planning & Prep" tab consolidates all tools and auxiliary information (cost summary, assistants, important notes, car rental info, and a new souvenirs section). This structure provides the most logical separation of concerns for a user: checking travel logistics, following the day-to-day plan, and accessing preparation materials are three distinct user tasks, now mapped to three main tabs. -->
+    <!-- Application Structure Plan: A single-page dashboard combining the best of previous versions. It uses a three-tab main navigation: "航班總覽" (Flight Overview), "行程時間軸" (Itinerary Timeline), and "規劃與準備" (Planning & Prep). The "Flight Overview" tab isolates flight details. The "Itinerary Timeline" tab becomes the centerpiece, displaying the detailed vertical timeline for a chronological step-by-step view of the trip. The "Planning & Prep" tab consolidates all tools and auxiliary information (cost summary, assistants, important notes, car rental info, and a new souvenirs section). The to-do list is now pre-populated with unresolved items for a better user start. -->
     <!-- Visualization & Content Choices: Itinerary Data -> Goal: Organize/Follow -> Viz: Vertical Timeline with event cards. Interaction: Clickable links for external maps. Justification: Best reflects the user's detailed chronological plan. Flight Data -> Goal: Inform -> Viz: Flight cards. Justification: Clear and structured display. Prep Info -> Goal: Inform/Assist -> Viz: Styled cards and modal-triggered assistants. Justification: Groups tools and reference material logically. Library/Method: Vanilla JS, Tailwind. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
@@ -202,6 +202,22 @@
                 <li>極光攝影用三腳架</li>
                 <li>筆記本、筆、輕便購物袋、書/電子書</li>
             </ul>`;
+            
+        let todos = [];
+        const TODO_STORAGE_KEY = 'icelandTripToDoList';
+        const defaultToDos = [
+            { id: 1, text: "預訂10/2住宿 (Akureyri或往西沿途)", completed: false },
+            { id: 2, text: "預訂10/3住宿 (斯奈山半島，如Grundarfjörður)", completed: false },
+            { id: 3, text: "預訂10/4住宿 (雷克雅維克)", completed: false },
+            { id: 4, text: "預訂租車 (rentalcars/Blue Car Rental) 並確認保險 (SAAP, SCDW, GP)", completed: false },
+            { id: 5, text: "預訂9/30冰上摩托車活動", completed: false },
+            { id: 6, text: "預訂10/3火山內部探險活動 (Víðgelmir)", completed: false },
+            { id: 7, text: "預訂10/5天空潟湖 (Sky Lagoon)", completed: false },
+            { id: 8, text: "申請美國ESTA", completed: false },
+            { id: 9, text: "換少量冰島克朗 (ISK) 現金", completed: false },
+            { id: 10, text: "準備網路SIM卡或Wi-Fi分享器", completed: false },
+            { id: 11, text: "預訂9/29 下午4點 遊傑古沙龍冰河湖活動", completed: false }
+        ];
 
         document.addEventListener('DOMContentLoaded', () => {
             const timelineContainer = document.getElementById('timeline-container');
@@ -216,7 +232,6 @@
             const modalLoading = document.getElementById('modal-loading');
             const modalError = document.getElementById('modal-error');
 
-            // --- MODAL FUNCTIONS ---
             function showModal(title, contentHTML = '', isStaticContent = false) {
                 modalTitle.textContent = title;
                 modalResponse.innerHTML = contentHTML;
@@ -238,12 +253,8 @@
             }
 
             modalCloseBtn.addEventListener('click', hideModal);
-            generalModal.addEventListener('click', (event) => {
-                if (event.target === generalModal) hideModal();
-            });
+            generalModal.addEventListener('click', (event) => { if (event.target === generalModal) hideModal(); });
 
-
-            // --- DATA RENDERING FUNCTIONS ---
             function renderTimeline() {
                 timelineContainer.innerHTML = '';
                 tripData.timeline.forEach((day) => {
@@ -280,7 +291,6 @@
             }
 
             function renderPrepTab() {
-                // Render Important Notes
                 const notesUl = document.createElement('ul');
                 notesUl.className = "list-disc pl-5 space-y-4";
                 tripData.importantNotes.forEach(note => {
@@ -294,7 +304,7 @@
                 });
                 notesContainer.innerHTML = '';
                 notesContainer.appendChild(notesUl);
-                // Render Souvenirs
+
                 souvenirsContainer.innerHTML = `
                     <ul class="list-disc pl-5 space-y-3">
                         <li><strong>冰島羊毛衣 (Lopapeysa)</strong>：最具代表性的紀念品，保暖且有獨特圖騰。</li>
@@ -313,26 +323,66 @@
                     <p class="mt-4 text-sm text-stone-500"><strong>參考資料：</strong> <a href="https://shiningchan.com/blog/post/iceland-souvenirs-recommendation/" target="_blank" class="text-sky-600 hover:underline">Shining Chan's Blog</a></p>`;
             }
             
-            // --- EVENT LISTENERS ---
-            document.getElementById('btn-activity-ideas').addEventListener('click', async () => {
-                showModal('💡 活動靈感 (AI 支援)');
-                const prompt = "我將在9月底到10月初前往冰島旅遊。請推薦一些適合這個季節在冰島進行的活動和值得探訪的景點。請以條列式清單方式呈現，並簡短描述每個項目。";
-                try {
-                    const ideasText = "This is a placeholder for the Gemini API response. Replace with actual API call if needed."; // Placeholder
-                    modalResponse.innerHTML = ideasText.split('\n').map(line => `<p>${line.replace(/^[\-\*]\s*/, '')}</p>`).join('');
-                } catch (error) {
-                    modalError.textContent = `無法取得活動建議：${error.message}`;
-                    modalError.classList.remove('hidden');
-                } finally {
-                    modalLoading.classList.add('hidden');
+            // To-Do List Logic
+            let todos = [];
+            const TODO_STORAGE_KEY = 'icelandTripToDoList';
+
+            function loadToDos() {
+                const storedToDos = localStorage.getItem(TODO_STORAGE_KEY);
+                if (storedToDos && JSON.parse(storedToDos).length > 0) {
+                    todos = JSON.parse(storedToDos);
+                } else {
+                    todos = [
+                        { id: 1, text: "預訂10/2住宿 (Akureyri或往西沿途)", completed: false },
+                        { id: 2, text: "預訂10/3住宿 (斯奈山半島，如Grundarfjörður)", completed: false },
+                        { id: 3, text: "預訂10/4住宿 (雷克雅維克)", completed: false },
+                        { id: 4, text: "預訂租車 (rentalcars/Blue Car Rental) 並確認保險", completed: false },
+                        { id: 5, text: "預訂9/29 下午4點 遊傑古沙龍冰河湖活動", completed: false },
+                        { id: 6, text: "預訂9/30冰上摩托車活動", completed: false },
+                        { id: 7, text: "預訂10/3火山內部探險活動 (Víðgelmir)", completed: false },
+                        { id: 8, text: "預訂10/5天空潟湖 (Sky Lagoon)", completed: false },
+                        { id: 9, text: "申請美國ESTA", completed: false },
+                        { id: 10, text: "換少量冰島克朗 (ISK) 現金", completed: false },
+                        { id: 11, text: "準備網路SIM卡或Wi-Fi分享器", completed: false }
+                    ];
+                    saveToDos();
                 }
-            });
-            document.getElementById('btn-packing-list').addEventListener('click', () => {
-                showModal('🎒 打包建議', preGeneratedPackingList, true);
-            });
-            document.getElementById('btn-todo-list').addEventListener('click', () => {
-                showModal('📋 待辦清單', '待辦清單功能建構中...', true);
-            });
+            }
+
+            function saveToDos() { localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(todos)); }
+
+            function renderToDoList() {
+                const c = document.createElement('div');
+                c.innerHTML = `<div class="flex mb-4"><input type="text" id="todo-input" placeholder="新增待辦事項..." class="flex-grow p-2 border border-slate-300 rounded-l-md focus:ring-amber-500 focus:border-amber-500"><button id="add-todo-btn" class="bg-amber-500 hover:bg-amber-600 text-white p-2 rounded-r-md">新增</button></div><ul id="todo-items-list" class="space-y-2"></ul>`;
+                const ul = c.querySelector('#todo-items-list');
+                todos.forEach(todo => {
+                    const li = document.createElement('li');
+                    li.className = `todo-item flex items-center justify-between p-2 border-b border-slate-200 ${todo.completed ? 'completed' : ''}`;
+                    li.dataset.id = todo.id;
+                    li.innerHTML = `<input type="checkbox" ${todo.completed ? 'checked' : ''} class="form-checkbox h-5 w-5 text-amber-500 rounded focus:ring-amber-400 mr-3 cursor-pointer"><span class="flex-grow cursor-pointer">${todo.text}</span><button class="text-red-400 hover:text-red-600 font-semibold ml-3">✕</button>`;
+                    ul.appendChild(li);
+                });
+                c.querySelector('#add-todo-btn').addEventListener('click', () => {
+                    const input = c.querySelector('#todo-input');
+                    if (input.value.trim()) { addToDoItem(input.value.trim()); input.value = ''; }
+                });
+                c.querySelector('#todo-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') c.querySelector('#add-todo-btn').click(); });
+                ul.addEventListener('click', (e) => {
+                    const li = e.target.closest('li.todo-item'); if (!li) return; const id = Number(li.dataset.id);
+                    if (e.target.type === 'checkbox' || e.target.tagName === 'SPAN') toggleComplete(id);
+                    else if (e.target.tagName === 'BUTTON') deleteToDoItem(id);
+                });
+                return c.innerHTML;
+            }
+            
+            function addToDoItem(text) { todos.push({ id: Date.now(), text, completed: false }); saveToDos(); modalResponse.innerHTML = renderToDoList(); }
+            function toggleComplete(id) { const t = todos.find(x => x.id === id); if (t) t.completed = !t.completed; saveToDos(); modalResponse.innerHTML = renderToDoList(); }
+            function deleteToDoItem(id) { todos = todos.filter(t => t.id !== id); saveToDos(); modalResponse.innerHTML = renderToDoList(); }
+
+            // --- EVENT LISTENERS ---
+            document.getElementById('btn-activity-ideas').addEventListener('click', async () => { /* AI call logic here */ });
+            document.getElementById('btn-packing-list').addEventListener('click', () => { showModal('🎒 打包建議', preGeneratedPackingList, true); });
+            document.getElementById('btn-todo-list').addEventListener('click', () => { loadToDos(); showModal('📋 行前待辦清單', renderToDoList(), true); });
             
             // --- INITIALIZATION ---
             renderTimeline();
