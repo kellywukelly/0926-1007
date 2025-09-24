@@ -162,7 +162,9 @@
                 { type: "voltage_plug", text: "電壓與插座：冰島的標準電壓為 230V，頻率為 50Hz。插座類型為 F 型（雙圓孔），需要準備轉接頭。", imageUrl: "https://raw.githubusercontent.com/kellywukelly/0926-1007/main/Steckdose.jpg", imageAlt: "F 型 (Schuko) 插座與插頭示意圖"},
                 { type: 'text', content: '轉機：國際轉機請預留充足時間，特別是不同航空公司。'},
                 { type: 'text', content: '住宿與當地交通：別忘了預訂在西雅圖（若過夜）及冰島的住宿與當地交通。'},
-                { type: 'text', content: '旅遊保險：強烈建議購買旅遊平安險及旅遊不便險。'}
+                { type: 'text', content: '旅遊保險：強烈建議購買旅遊平安險及旅遊不便險。'},
+                { type: 'text', content: '<a href="https://umferdin.is/en" target="_blank" class="text-sky-600 hover:underline">冰島路況</a>' },
+                { type: 'text', content: '<a href="https://en.vedur.is/weather/forecasts/areas/" target="_blank" class="text-sky-600 hover:underline">冰島天氣</a>' }
             ],
             bookings: [
                 { title: '冰上摩托車 (Snowmobile tour on Vatnajökull Glacier)', ticket: 'FST-T102733345', provider: 'Glacierjourney / Fallastakkur', date: '2025/09/30 (二)', startTime: '09:30 AM', arrivalTime: '09:00 AM (需提前30分鐘)', participants: '4位成人', meetingPoint: 'Smyrlabjörg Hofn 781 IS (Hotel Smyrlabjörg 旁的基地營)', contact: '+354 478 1517', cancellationPolicy: '如果在活動開始前 2 天（含）內取消，將收取 90% 的取消費用。' },
@@ -301,7 +303,7 @@
                     if (note.type === 'voltage_plug') {
                         li.innerHTML = `${note.text} <br><img src="${note.imageUrl}" alt="${note.imageAlt}" class="mt-2 rounded-md shadow-sm max-w-[200px]" onerror="this.onerror=null;this.src='https://placehold.co/200x150/E2E8F0/475569?text=插座圖片'">`;
                     } else {
-                        li.textContent = note.content;
+                        li.innerHTML = note.content;
                     }
                     notesUl.appendChild(li);
                 });
